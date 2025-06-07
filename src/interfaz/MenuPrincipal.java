@@ -6,8 +6,12 @@ import java.awt.*;
 
 public class MenuPrincipal extends JPanel {
     public MenuPrincipal(VentanaPrincipal ventana) {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 255));
+
+        JPanel contenido = new JPanel();
+        contenido.setLayout(new BoxLayout(contenido, BoxLayout.Y_AXIS));
+        contenido.setBackground(new Color(245, 245, 255));
 
         JLabel titulo = new JLabel("Menú Principal");
         titulo.setFont(new Font("SansSerif", Font.BOLD, 36));
@@ -23,12 +27,43 @@ public class MenuPrincipal extends JPanel {
         JButton creditos = crearBoton("Créditos", new Color(186, 143, 255));
         creditos.addActionListener(e -> ventana.mostrar("creditos"));
 
-        add(titulo);
-        add(registro);
-        add(Box.createVerticalStrut(20));
-        add(instrucciones);
-        add(Box.createVerticalStrut(20));
-        add(creditos);
+        contenido.add(titulo);
+        contenido.add(registro);
+        contenido.add(Box.createVerticalStrut(20));
+        contenido.add(instrucciones);
+        contenido.add(Box.createVerticalStrut(20));
+        contenido.add(creditos);
+
+        add(contenido, BorderLayout.CENTER);
+
+        // Botón inferior derecho para volver al inicio
+        JButton volver = new JButton("Inicio") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(255, 182, 193));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 45, 45);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+            @Override
+            protected void paintBorder(Graphics g) {}
+        };
+        volver.setFont(new Font("SansSerif", Font.BOLD, 18));
+        volver.setForeground(Color.WHITE);
+        volver.setFocusPainted(false);
+        volver.setContentAreaFilled(false);
+        volver.setOpaque(false);
+        volver.setPreferredSize(new Dimension(150, 40));
+        volver.setMaximumSize(new Dimension(150, 40));
+        volver.addActionListener(e -> ventana.mostrar("presentacion"));
+
+        JPanel pie = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pie.setBackground(new Color(245, 245, 255));
+        pie.add(volver);
+
+        add(pie, BorderLayout.SOUTH);
     }
 
     private JButton crearBoton(String texto, Color color) {
