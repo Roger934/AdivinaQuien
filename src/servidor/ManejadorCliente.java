@@ -1,11 +1,12 @@
 package servidor;
 
+import utils.GameDataServidor;
+
 import java.io.*;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class ManejadorCliente extends Thread {
-    private Socket cliente;
+    private final Socket cliente;
 
     public ManejadorCliente(Socket cliente) {
         this.cliente = cliente;
@@ -14,30 +15,36 @@ public class ManejadorCliente extends Thread {
     @Override
     public void run() {
         try {
-            BufferedReader lector = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
-            PrintWriter escritor = new PrintWriter(cliente.getOutputStream(), true);
+            DataInputStream in = new DataInputStream(cliente.getInputStream());
+            DataOutputStream out = new DataOutputStream(cliente.getOutputStream());
 
-            // Hilo para leer mensajes del cliente
-            new Thread(() -> {
-                String mensaje;
-                try {
-                    while ((mensaje = lector.readLine()) != null) {
-                        System.out.println("[Cliente] " + mensaje);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Cliente desconectado.");
-                }
-            }).start();
+            String nombre = in.readUTF();
+            System.out.println("[Servidor] Jugador intentando conectarse: " + nombre);
 
-            // Leer mensajes desde la consola del servidor y enviarlos al cliente
-            Scanner scanner = new Scanner(System.in);
-            String entrada;
-            while ((entrada = scanner.nextLine()) != null) {
-                escritor.println(entrada);
+            boolean aceptado = GameDataServidor.getInstance().agregarNombre(nombre);
+
+            if (!aceptado) {
+                out.writeUTF("RECHAZADO");
+                cliente.close();
+                return;
             }
 
-        } catch (IOException e) {
-            System.err.println("Error al manejar cliente: " + e.getMessage());
+            out.writeUTF("ACEPTADO");
+            System.out.println("[Servidor] Jugador aceptado: " + nombre);
+
+            // Espera breve para que ambos jugadores estén listos
+            while (GameDataServidor.getInstance().getNumeroJugadores() < 2) {
+                Thread.sleep(200);
+            }
+
+            // Enviar nombre del oponente
+            String nombreOponente = GameDataServidor.getInstance().getOponente(nombre);
+            out.writeUTF(nombreOponente);
+
+            // Aquí podrías enviar también personaje asignado, turno inicial, etc.
+
+        } catch (IOException | InterruptedException e) {
+            System.err.println("[Servidor] Error manejando cliente: " + e.getMessage());
         }
     }
 }

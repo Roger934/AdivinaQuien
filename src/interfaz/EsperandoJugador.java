@@ -2,6 +2,9 @@ package interfaz;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.DataInputStream;
+import java.io.IOException;
+import utils.GameDataCliente;
 
 public class EsperandoJugador extends JPanel {
 
@@ -33,7 +36,7 @@ public class EsperandoJugador extends JPanel {
         mensaje = new JLabel("Esperando al segundo jugador...");
         mensaje.setFont(new Font("SansSerif", Font.BOLD, 24));
         mensaje.setPreferredSize(new Dimension(500, 40));
-        mensaje.setHorizontalAlignment(SwingConstants.CENTER); // o CENTER si prefieres
+        mensaje.setHorizontalAlignment(SwingConstants.CENTER);
         mensajePanel.add(mensaje);
         add(mensajePanel);
 
@@ -50,32 +53,23 @@ public class EsperandoJugador extends JPanel {
 
         add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // PANEL BOTÓN
-        JPanel botonPanel = new JPanel();
-        botonPanel.setBackground(new Color(245, 245, 255));
-        botonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        // HILO DE ESCUCHA DEL SERVIDOR
+        new Thread(() -> {
+            try {
+                if (GameDataCliente.getSocket() == null) return;
 
-        JButton btnCancelar = new JButton("Cancelar") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(255, 100, 100));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
-                g2.dispose();
-                super.paintComponent(g);
+                DataInputStream in = new DataInputStream(GameDataCliente.getSocket().getInputStream());
+                String mensajeServidor;
+                while ((mensajeServidor = in.readUTF()) != null) {
+                    if (mensajeServidor.equals("OK")) {
+                        GameDataCliente.setTiempoInicioLocal(System.currentTimeMillis());
+                        SwingUtilities.invokeLater(() -> ventana.mostrar("tablero"));
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("[EsperandoJugador] Error de conexión: " + e.getMessage());
             }
-
-            @Override protected void paintBorder(Graphics g) {}
-        };
-        btnCancelar.setFont(new Font("SansSerif", Font.BOLD, 16));
-        btnCancelar.setForeground(Color.WHITE);
-        btnCancelar.setFocusPainted(false);
-        btnCancelar.setContentAreaFilled(false);
-        btnCancelar.setOpaque(false);
-        btnCancelar.setPreferredSize(new Dimension(200, 40));
-        btnCancelar.addActionListener(e -> ventana.mostrar("modoConexion"));
-        botonPanel.add(btnCancelar);
-        add(botonPanel);
+        }).start();
     }
 }
