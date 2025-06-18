@@ -10,16 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/dbJAR/sqlite-jdbc-3.50.1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/gSonJAR/gson-2.10.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/XAMMP_JAR/mysql-connector-j-9.2.0/mysql-connector-j-9.2.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
