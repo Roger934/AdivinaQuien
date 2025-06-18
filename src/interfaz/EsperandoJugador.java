@@ -1,10 +1,12 @@
 package interfaz;
 
+import utils.GameDataCliente;
+import cliente.ClienteConexion;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.DataInputStream;
 import java.io.IOException;
-import utils.GameDataCliente;
 
 public class EsperandoJugador extends JPanel {
 
@@ -40,7 +42,7 @@ public class EsperandoJugador extends JPanel {
         mensajePanel.add(mensaje);
         add(mensajePanel);
 
-        // Timer para los puntos
+        // Animación con puntos
         Timer timer = new Timer(500, e -> {
             StringBuilder texto = new StringBuilder("Esperando al segundo jugador");
             for (int i = 0; i < puntos; i++) {
@@ -51,25 +53,35 @@ public class EsperandoJugador extends JPanel {
         });
         timer.start();
 
-        add(Box.createRigidArea(new Dimension(0, 30)));
-
-        // HILO DE ESCUCHA DEL SERVIDOR
+        // Hilo para escuchar señal "INICIAR"
         new Thread(() -> {
             try {
-                if (GameDataCliente.getSocket() == null) return;
+                ClienteConexion conexion = GameDataCliente.getConexion();
+                if (conexion == null) {
+                    System.err.println("❌ Error: La conexión es null en EsperandoJugador.");
+                    return;
+                }
 
-                DataInputStream in = new DataInputStream(GameDataCliente.getSocket().getInputStream());
-                String mensajeServidor;
-                while ((mensajeServidor = in.readUTF()) != null) {
-                    if (mensajeServidor.equals("OK")) {
-                        GameDataCliente.setTiempoInicioLocal(System.currentTimeMillis());
+                DataInputStream in = conexion.getEntrada();
+                while (true) {
+                    String msg = in.readUTF();
+                    if ("INICIAR".equals(msg)) {
+                        System.out.println("Recibido INICIAR. Cambiando al tablero...");
                         SwingUtilities.invokeLater(() -> ventana.mostrar("tablero"));
                         break;
                     }
                 }
             } catch (IOException e) {
-                System.err.println("[EsperandoJugador] Error de conexión: " + e.getMessage());
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                        this,
+                        "Se perdió la conexión con el servidor.",
+                        "Error de conexión",
+                        JOptionPane.ERROR_MESSAGE
+                ));
             }
         }).start();
+
+        add(Box.createRigidArea(new Dimension(0, 30)));
     }
 }

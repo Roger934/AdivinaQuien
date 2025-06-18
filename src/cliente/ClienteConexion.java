@@ -1,52 +1,43 @@
 package cliente;
 
-import utils.Config;
-import utils.GameDataCliente;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
 public class ClienteConexion {
+
     private Socket socket;
-    private DataInputStream in;
-    private DataOutputStream out;
+    private DataInputStream entrada;
+    private DataOutputStream salida;
 
-    public boolean conectar(String nombreJugador) {
+    public ClienteConexion(String ipServidor, int puerto) throws IOException {
+        this.socket = new Socket(ipServidor, puerto);
+        this.entrada = new DataInputStream(socket.getInputStream());
+        this.salida = new DataOutputStream(socket.getOutputStream());
+    }
+
+    public void enviar(String mensaje) throws IOException {
+        salida.writeUTF(mensaje);
+    }
+
+    public String recibir() throws IOException {
+        return entrada.readUTF();
+    }
+
+    public DataInputStream getEntrada() {
+        return entrada;
+    }
+
+    public void cerrar() {
         try {
-            socket = new Socket(Config.getIpServidor(), Config.getPuertoServidor());
-            GameDataCliente.setSocket(socket);
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
-
-            out.writeUTF(nombreJugador);
-            String respuesta = in.readUTF();
-
-            if (respuesta.equals("RECHAZADO")) {
-                socket.close();
-                return false;
-            }
-
-            GameDataCliente.setNombreJugador(nombreJugador);
-            String nombreOponente = in.readUTF();
-            GameDataCliente.setNombreOponente(nombreOponente);
-
-            GameDataCliente.setTiempoInicioLocal(System.currentTimeMillis());
-
-            return true;
-
+            socket.close();
         } catch (IOException e) {
-            System.err.println("[Cliente] Error al conectar: " + e.getMessage());
-            return false;
+            System.out.println("Error al cerrar socket: " + e.getMessage());
         }
     }
 
-    public void cerrarConexion() {
-        try {
-            if (socket != null) socket.close();
-        } catch (IOException e) {
-            System.err.println("[Cliente] Error al cerrar conexión: " + e.getMessage());
-        }
+    public boolean estaConectado() {
+        return socket != null && socket.isConnected() && !socket.isClosed();
     }
 }
