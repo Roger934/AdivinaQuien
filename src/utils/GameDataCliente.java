@@ -10,6 +10,7 @@ public class GameDataCliente {
     private static ClienteConexion conexion;
     private static List<Integer> listaPersonajes;
     private static String nombreRival;
+    private static modelo.Personaje personajeSecreto; // Variable personaje
 
     public static String getNombreJugador() {
         return nombreJugador;
@@ -45,6 +46,14 @@ public class GameDataCliente {
         nombreRival = nombre;
     }
 
+    // Personaje propio
+    public static modelo.Personaje getPersonajeSecreto() {
+        return personajeSecreto;
+    }
+
+    public static void setPersonajeSecreto(modelo.Personaje personaje) {
+        personajeSecreto = personaje;
+    }
 
 
     public static void limpiar() {
