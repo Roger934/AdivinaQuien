@@ -7,6 +7,7 @@ import utils.GameDataCliente;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -20,6 +21,15 @@ public class Tablero extends JPanel {
     private JLabel imagenSel;
     private JLabel nombreSel;
     private Personaje personajeSeleccionado; // 🔹 Nuevo atributo para guardar el personaje
+    private List<Personaje> personajes; // 🔹 Ahora es accesible en toda la clase
+
+    private JButton btnDesdeTablero;
+    private JButton btnDesdeLista;
+    private JButton btnAleatorio;
+
+    //private JLabel imagenSeleccionadaLabel;
+
+
 
     public Tablero(VentanaPrincipal ventana) {
         this.ventana = ventana;
@@ -27,6 +37,8 @@ public class Tablero extends JPanel {
         setBackground(Color.WHITE);
 
         List<Integer> lista = GameDataCliente.getListaPersonajes();
+        this.personajes = TableroControlador.obtenerPersonajesDesdeBD(lista);
+
         List<Personaje> personajes = TableroControlador.obtenerPersonajesDesdeBD(lista);
 
         JPanel panelSuperior = crearPanelSuperior();
@@ -37,6 +49,35 @@ public class Tablero extends JPanel {
 
         JPanel tableroPanel = crearTableroVisual(personajes);
         add(tableroPanel, BorderLayout.CENTER);
+
+        // Hilo para los mensajes
+        new Thread(() -> {
+            try {
+                var conexion = GameDataCliente.getConexion();
+                var entrada = conexion.getEntrada();
+
+                while (true) {
+                    String mensaje = entrada.readUTF();
+
+                    if (mensaje.startsWith("OPONENTE_PERSONAJE:")) {
+                        String nombrePersonaje = mensaje.substring("OPONENTE_PERSONAJE:".length()).trim();
+                        System.out.println("🕵️ El personaje del oponente es: " + nombrePersonaje);
+
+                        // Aquí puedes guardar o mostrar en la interfaz si lo deseas
+                        GameDataCliente.setPersonajeRival(nombrePersonaje);
+                        System.out.println("[Cliente] Personaje rival guardado en GameDATA -> " + GameDataCliente.getPersonajeRival());
+
+                    }
+
+                    // Aquí puedes agregar más handlers como:
+                    // else if (mensaje.startsWith("PREGUNTA:")) { ... }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "❌ Error de conexión con el servidor.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }).start();
     }
 
     private JPanel crearPanelSuperior() {
@@ -88,15 +129,16 @@ public class Tablero extends JPanel {
         panelIzquierdo.add(panelSeleccion);
         panelIzquierdo.add(Box.createVerticalStrut(10));
 
-        JButton btnDesdeTablero = new JButton("🔘 Desde tablero");
-        JButton btnDesdeLista = new JButton("📋 Desde lista");
-        JButton btnAleatorio = new JButton("🎲 Aleatorio");
+        btnDesdeTablero = new JButton("🔘 Desde tablero");
+        btnDesdeLista = new JButton("📋 Desde lista");
+        btnAleatorio = new JButton("🎲 Aleatorio");
+
 
         ActionListener activar = e -> activarSeleccion();
 
         btnDesdeTablero.addActionListener(activar);
-        btnDesdeLista.addActionListener(activar);
-        btnAleatorio.addActionListener(activar);
+        btnDesdeLista.addActionListener(e -> seleccionarDesdeLista());
+        btnAleatorio.addActionListener(e -> seleccionarAleatoriamente());
 
         for (JButton b : new JButton[]{btnDesdeTablero, btnDesdeLista, btnAleatorio}) {
             b.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -143,7 +185,7 @@ public class Tablero extends JPanel {
                         return;
                     }
 
-                    if (tableroInteractivo && personajeYaElegido && !p.equals(GameDataCliente.getPersonajeSecreto())) {
+                    if (tableroInteractivo && personajeYaElegido) {
                         if (imagen.getIcon() != null) {
                             imagen.setIcon(null);
                             imagen.setOpaque(true);
@@ -185,12 +227,65 @@ public class Tablero extends JPanel {
 
         JOptionPane.showMessageDialog(ventana, "🎯 Personaje seleccionado: " + personaje.getNombre());
 
-        // 🔥 Aquí puedes luego llamar a enviarPersonajeAlServidor()
+        enviarPersonajeAlServidor(); // Ahora se envía al servidor
+
+        // ✅ Desactiva los botones de selección
+        btnDesdeTablero.setEnabled(false);
+        btnDesdeLista.setEnabled(false);
+        btnAleatorio.setEnabled(false);
     }
 
     private void enviarPersonajeAlServidor() {
         if (personajeSeleccionado != null) {
-            // Lógica de envío usando GameDataCliente.getConexion().enviar(...)
+            try {
+                String mensaje = "PERSONAJE:" + personajeSeleccionado.getNombre();
+                GameDataCliente.getConexion().enviar(mensaje);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
+
+    // Random
+    private void seleccionarAleatoriamente() {
+        if (personajeYaElegido) {
+            JOptionPane.showMessageDialog(this, "Ya seleccionaste un personaje.");
+            return;
+        }
+
+        Random rand = new Random();
+        int posicion = rand.nextInt(personajes.size()); // 0 a 23
+
+        Personaje personaje = personajes.get(posicion);
+        seleccionarPersonaje(personaje); // Reutiliza el método existente
+    }
+
+    // Selector de lista
+    private void seleccionarDesdeLista() {
+        if (personajeYaElegido) {
+            JOptionPane.showMessageDialog(this, "Ya seleccionaste un personaje.");
+            return;
+        }
+
+        JComboBox<Personaje> comboBox = new JComboBox<>();
+        for (Personaje p : personajes) {
+            comboBox.addItem(p); // mostrará el resultado de toString()
+        }
+
+        int opcion = JOptionPane.showConfirmDialog(
+                this,
+                comboBox,
+                "Selecciona tu personaje",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (opcion == JOptionPane.OK_OPTION) {
+            Personaje seleccionado = (Personaje) comboBox.getSelectedItem();
+            if (seleccionado != null) {
+                seleccionarPersonaje(seleccionado); // Reutilizamos método
+            }
+        }
+    }
+
+
 }

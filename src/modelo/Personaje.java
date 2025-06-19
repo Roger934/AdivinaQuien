@@ -47,10 +47,7 @@ public class Personaje implements Serializable {
 
     @Override
     public String toString() {
-        return "Personaje{" +
-                "id=" + id +
-                ", nombre='" + nombre + '\'' +
-                ", rutaImagen='" + rutaImagen + '\'' +
-                '}';
+        return nombre; // Esto mostrará solo el nombre en la lista desplegable
     }
+
 }
