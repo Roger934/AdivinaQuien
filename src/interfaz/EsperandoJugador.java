@@ -7,11 +7,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EsperandoJugador extends JPanel {
 
     private JLabel mensaje;
     private int puntos = 1;
+    boolean recibioIniciar = false;
+    boolean recibioDatos = false;
+    List<Integer> ids = new ArrayList<>();
 
     public EsperandoJugador(VentanaPrincipal ventana) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -53,24 +58,48 @@ public class EsperandoJugador extends JPanel {
         });
         timer.start();
 
-        // Hilo para escuchar señal "INICIAR"
+        // Hilo para escuchar mensajes del servidor
         new Thread(() -> {
             try {
                 ClienteConexion conexion = GameDataCliente.getConexion();
                 if (conexion == null) {
-                    System.err.println("❌ Error: La conexión es null en EsperandoJugador.");
+                    System.err.println("Error: La conexión es null en EsperandoJugador.");
                     return;
                 }
 
                 DataInputStream in = conexion.getEntrada();
-                while (true) {
+
+                while (!(recibioIniciar && recibioDatos)) {
                     String msg = in.readUTF();
-                    if ("INICIAR".equals(msg)) {
-                        System.out.println("Recibido INICIAR. Cambiando al tablero...");
-                        SwingUtilities.invokeLater(() -> ventana.mostrar("tablero"));
-                        break;
+
+                    if (msg.startsWith("RIVAL:")) {
+                        String rival = msg.substring(6).trim();
+                        System.out.println("🎮 Rival recibido: " + rival);
+                        GameDataCliente.setNombreRival(rival);
+
+                    } else if (msg.startsWith("DATOS:")) {
+                        String datos = msg.substring(6).replaceAll("[\\[\\]\\s]", "");
+                        String[] partes = datos.split(",");
+                        for (String s : partes) {
+                            try {
+                                ids.add(Integer.parseInt(s));
+                            } catch (NumberFormatException e) {
+                                System.out.println("Número inválido recibido: " + s);
+                            }
+                        }
+                        System.out.println("🎯 IDs recibidos del servidor:");
+                        System.out.println(ids);
+                        GameDataCliente.setListaPersonajes(ids);
+                        recibioDatos = true;
+
+                    } else if ("INICIAR".equals(msg)) {
+                        System.out.println("✅ Señal INICIAR recibida.");
+                        recibioIniciar = true;
                     }
                 }
+
+                // Ya podemos cambiar de pantalla
+                SwingUtilities.invokeLater(() -> ventana.mostrarTablero());
             } catch (IOException e) {
                 e.printStackTrace();
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(

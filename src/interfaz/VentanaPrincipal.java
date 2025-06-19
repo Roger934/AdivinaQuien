@@ -19,7 +19,6 @@ public class VentanaPrincipal extends JFrame {
         contenedor.add(new Creditos(this), "creditos");
         contenedor.add(new RegistroJugador(this), "registroJugador");
         contenedor.add(new VentanaJugar(this), "ventanaJugar");
-        contenedor.add(new Tablero(this), "tablero");
 
         setTitle("Adivina Quién");
         setSize(1280, 720);
@@ -36,6 +35,11 @@ public class VentanaPrincipal extends JFrame {
     public void irAEperandoJugador() {
         contenedor.add(new EsperandoJugador(this), "esperandoJugador");
         mostrar("esperandoJugador");
+    }
+
+    public void mostrarTablero() {
+        contenedor.add(new Tablero(this), "tablero");
+        mostrar("tablero");
     }
 
     public static void main(String[] args) {

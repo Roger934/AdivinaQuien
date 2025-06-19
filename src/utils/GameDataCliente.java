@@ -2,10 +2,14 @@ package utils;
 
 import cliente.ClienteConexion;
 
+import java.util.List;
+
 public class GameDataCliente {
 
     private static String nombreJugador;
     private static ClienteConexion conexion;
+    private static List<Integer> listaPersonajes;
+    private static String nombreRival;
 
     public static String getNombreJugador() {
         return nombreJugador;
@@ -22,6 +26,26 @@ public class GameDataCliente {
     public static void setConexion(ClienteConexion conn) {
         GameDataCliente.conexion = conn;
     }
+
+    // Lista de personajes Enteros del tablero
+    public static void setListaPersonajes(List<Integer> lista) {
+        listaPersonajes = lista;
+    }
+
+    public static List<Integer> getListaPersonajes() {
+        return listaPersonajes;
+    }
+
+    // Nombre del rival
+    public static String getNombreRival() {
+        return nombreRival;
+    }
+
+    public static void setNombreRival(String nombre) {
+        nombreRival = nombre;
+    }
+
+
 
     public static void limpiar() {
         nombreJugador = null;
