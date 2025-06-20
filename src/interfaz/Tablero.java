@@ -1,11 +1,15 @@
 package interfaz;
 
+import logica.RegistroPartida;
 import logica.TableroControlador;
 import modelo.Personaje;
 import utils.GameDataCliente;
 import logica.PreguntaControlador;
 
-
+import javax.swing.Timer;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.awt.event.ActionEvent;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -53,6 +57,17 @@ public class Tablero extends JPanel {
     private boolean esperandoRespuesta = false;
     private boolean yaAdivinoEsteTurno = false;
 
+    // Timer
+    private Timer timerPartida;
+    private long tiempoInicioMillis;
+    private JLabel lblTimer;
+
+    // Fecha
+    private LocalDate fechaPartida;
+
+
+    // Extras:
+    private JPanel vidasPanel;
 
 
     // Creación de todo el tablero
@@ -134,6 +149,34 @@ public class Tablero extends JPanel {
 
                     else if (mensaje.equalsIgnoreCase("GANASTE")) {
                         System.out.println("🏆 Has ganado la partida.");
+                        if (timerPartida != null) {
+                            timerPartida.stop();
+                        }
+                        long tiempoFinalMillis = System.currentTimeMillis() - tiempoInicioMillis;
+                        int segundos = (int) (tiempoFinalMillis / 1000) % 60;
+                        int minutos = (int) ((tiempoFinalMillis / 1000) / 60);
+
+                        // Para guardar luego como LocalTime:
+                        LocalTime duracionFinal = LocalTime.of(0, minutos, segundos);
+                        System.out.println("Duración de la partida: " + duracionFinal);
+                        System.out.println("Fecha: " + fechaPartida);
+
+                        // Guardar partida si eres el ganador
+                        String jugador1 = GameDataCliente.getNombreJugador();
+                        String jugador2 = GameDataCliente.getNombreRival();
+                        String personajeGanador = GameDataCliente.getPersonajeSecreto().getNombre(); // ya está seleccionado por el jugador actual
+
+                        RegistroPartida partida = new RegistroPartida(
+                                jugador1,
+                                jugador2,
+                                jugador1, // el ganador es este cliente
+                                personajeGanador,
+                                fechaPartida,
+                                duracionFinal
+                        );
+
+                        partida.guardarEnBaseDeDatos();
+
                         SwingUtilities.invokeLater(() -> {
                             ventana.mostrar("ventanaGanador");
                         });
@@ -152,35 +195,74 @@ public class Tablero extends JPanel {
             }
         }).start();
         // -------------------------------------------------------------------------------------------------------------
+
+        // Fecha y timer
+
+        fechaPartida = LocalDate.now();
+        tiempoInicioMillis = System.currentTimeMillis();
+
+        timerPartida = new Timer(1000, e -> {
+            long tiempoActualMillis = System.currentTimeMillis();
+            long transcurrido = tiempoActualMillis - tiempoInicioMillis;
+
+            int segundos = (int) (transcurrido / 1000) % 60;
+            int minutos = (int) ((transcurrido / 1000) / 60);
+
+            lblTimer.setText(String.format("⏱ Tiempo: %02d:%02d", minutos, segundos));
+        });
+        timerPartida.start();
     }
 
+    //__________________________________SUPERIOR__________________________
+
     private JPanel crearPanelSuperior() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
         panel.setBackground(new Color(230, 240, 255));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // ---------- TÍTULO ----------
+        // ---------- ESQUINA SUPERIOR DERECHA: FECHA Y TIEMPO ----------
+        JPanel panelFechaHora = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelFechaHora.setOpaque(false);
+
+        JLabel lblFecha = new JLabel("📅 " + java.time.LocalDate.now());
+        lblFecha.setFont(new Font("SansSerif", Font.PLAIN, 13));
+
+        lblTimer = new JLabel("⏱ Tiempo: 00:00");
+        lblTimer.setFont(new Font("Monospaced", Font.BOLD, 13));
+
+        panelFechaHora.add(lblFecha);
+        panelFechaHora.add(Box.createHorizontalStrut(10));
+        panelFechaHora.add(lblTimer);
+        panel.add(panelFechaHora, BorderLayout.NORTH);
+
+        // ---------- TÍTULO CENTRADO ----------
         JLabel titulo = new JLabel("🎲 Adivina Quién 🎯", SwingConstants.CENTER);
         titulo.setFont(new Font("SansSerif", Font.BOLD, 28));
         titulo.setForeground(new Color(40, 60, 120));
-        panel.add(titulo, BorderLayout.NORTH);
+        panel.add(titulo, BorderLayout.CENTER);
 
-        // ---------- PANEL IZQUIERDO: JUGADOR Y VIDAS ----------
-        JPanel panelIzquierdo = new JPanel();
-        panelIzquierdo.setOpaque(false);
-        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
+        // ---------- PANEL INFERIOR: JUGADOR - VS - RIVAL ----------
+        JPanel panelInferior = new JPanel(new GridLayout(1, 3));
+        panelInferior.setOpaque(false);
 
-        JLabel lblJugador = new JLabel("Jugador: " + GameDataCliente.getNombreJugador());
+        // Jugador y vidas
+        JPanel panelJugador = new JPanel();
+        panelJugador.setOpaque(false);
+        panelJugador.setLayout(new BoxLayout(panelJugador, BoxLayout.Y_AXIS));
+
+        JLabel lblJugador = new JLabel("Jugador: " + GameDataCliente.getNombreJugador(), SwingConstants.CENTER);
         lblJugador.setFont(new Font("SansSerif", Font.BOLD, 16));
+        lblJugador.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblJugador.setForeground(new Color(20, 40, 90));
 
-        JPanel panelVidas = crearPanelVidas(3); // Inicialmente 3 vidas
+        vidasPanel = crearPanelVidas(vidas); // asignamos a variable global para actualizar
 
-        panelIzquierdo.add(lblJugador);
-        panelIzquierdo.add(Box.createVerticalStrut(5));
-        panelIzquierdo.add(panelVidas);
+        panelJugador.add(lblJugador);
+        panelJugador.add(Box.createVerticalStrut(5));
+        panelJugador.add(vidasPanel);
 
-        // ---------- PANEL CENTRAL: VS ----------
+        // VS en medio
         JPanel panelCentral = new JPanel();
         panelCentral.setOpaque(false);
         JLabel vs = new JLabel("VS", SwingConstants.CENTER);
@@ -188,48 +270,46 @@ public class Tablero extends JPanel {
         vs.setForeground(new Color(200, 50, 50));
         panelCentral.add(vs);
 
-        // ---------- PANEL DERECHO: FECHA, TIMER, RIVAL ----------
-        JPanel panelDerecho = new JPanel();
-        panelDerecho.setOpaque(false);
-        panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
-
-        JLabel lblFecha = new JLabel("📅 " + java.time.LocalDate.now());
-        lblFecha.setFont(new Font("SansSerif", Font.PLAIN, 14));
-
-        JLabel lblTimer = new JLabel("⏱ Tiempo: 00:00");
-        lblTimer.setFont(new Font("Monospaced", Font.BOLD, 16));
-
-        JLabel lblRival = new JLabel("Rival: " + GameDataCliente.getNombreRival());
+        // Rival nombre
+        JPanel panelRival = new JPanel();
+        panelRival.setOpaque(false);
+        JLabel lblRival = new JLabel("Rival: " + GameDataCliente.getNombreRival(), SwingConstants.CENTER);
         lblRival.setFont(new Font("SansSerif", Font.BOLD, 16));
         lblRival.setForeground(new Color(120, 30, 30));
+        panelRival.add(lblRival);
 
-        panelDerecho.add(lblFecha);
-        panelDerecho.add(Box.createVerticalStrut(5));
-        panelDerecho.add(lblTimer);
-        panelDerecho.add(Box.createVerticalStrut(5));
-        panelDerecho.add(lblRival);
+        panelInferior.add(panelJugador);
+        panelInferior.add(panelCentral);
+        panelInferior.add(panelRival);
 
-        // ---------- ENSAMBLADO ----------
-        panel.add(panelIzquierdo, BorderLayout.WEST);
-        panel.add(panelCentral, BorderLayout.CENTER);
-        panel.add(panelDerecho, BorderLayout.EAST);
-
+        panel.add(panelInferior, BorderLayout.SOUTH);
         return panel;
     }
 
-    // Método auxiliar para mostrar corazones
     private JPanel crearPanelVidas(int vidas) {
         JPanel panel = new JPanel();
         panel.setOpaque(false);
         for (int i = 0; i < vidas; i++) {
             ImageIcon corazon = new ImageIcon("assets/iconos/corazon.png");
-            Image img = corazon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+            Image img = corazon.getImage().getScaledInstance(18, 18, Image.SCALE_SMOOTH);
             JLabel lbl = new JLabel(new ImageIcon(img));
             panel.add(lbl);
         }
         return panel;
     }
 
+    private void actualizarVidasVisuales() {
+        vidasPanel.removeAll();
+        JPanel nuevo = crearPanelVidas(vidas);
+        for (Component c : nuevo.getComponents()) {
+            vidasPanel.add(c);
+        }
+        vidasPanel.revalidate();
+        vidasPanel.repaint();
+    }
+
+
+    //________________________________________________________________________________
 
     private JPanel crearPanelIzquierdo() {
         JPanel panelIzquierdo = new JPanel();
@@ -379,6 +459,7 @@ public class Tablero extends JPanel {
                         } else {
                             vidas--;
                             System.out.println("❌ Fallaste. Te quedan " + vidas + " vidas.");
+                            actualizarVidasVisuales();
 
                             if (vidas <= 0) {
                                 yaFinalizoPartida = true;
