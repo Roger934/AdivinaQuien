@@ -6,9 +6,13 @@ import utils.GameDataCliente;
 import logica.PreguntaControlador;
 
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -35,7 +39,15 @@ public class Tablero extends JPanel {
     private JButton btnNo;
     private String preguntaPendiente = null;
 
+    // Adivnar
+    private boolean modoAdivinar = false;
 
+    // Para las vidas y finalización de la partida
+    private int vidas = 3;
+    private boolean yaFinalizoPartida = false;
+
+
+    // Creación de todo el tablero
     public Tablero(VentanaPrincipal ventana) {
         this.ventana = ventana;
         setLayout(new BorderLayout());
@@ -59,7 +71,7 @@ public class Tablero extends JPanel {
         JPanel panelDerecho = crearPanelDerecho();
         add(panelDerecho, BorderLayout.EAST);
 
-        // Hilo para los mensajes
+        // Hilo para los mensajes -----------------------------------------------------------------------------
         new Thread(() -> {
             try {
                 var conexion = GameDataCliente.getConexion();
@@ -85,6 +97,7 @@ public class Tablero extends JPanel {
                             areaChat.append("Rival: " + pregunta + "\n");
                             btnSi.setEnabled(true);
                             btnNo.setEnabled(true);
+                            reproducirSonido("assets/sonidos/pregunta.wav");
                         });
                     }
 
@@ -92,6 +105,21 @@ public class Tablero extends JPanel {
                         String respuesta = mensaje.substring("RESPUESTA:".length()).trim();
                         SwingUtilities.invokeLater(() -> {
                             areaChat.append("Rival respondió: " + respuesta + "\n");
+                            reproducirSonido("assets/sonidos/respuesta.wav");
+                        });
+                    }
+
+                    else if (mensaje.equalsIgnoreCase("GANASTE")) {
+                        System.out.println("🏆 Has ganado la partida.");
+                        SwingUtilities.invokeLater(() -> {
+                            ventana.mostrar("ventanaGanador");
+                        });
+                    }
+
+                    else if (mensaje.equalsIgnoreCase("PERDISTE")) {
+                        System.out.println("😞 Has perdido la partida.");
+                        SwingUtilities.invokeLater(() -> {
+                            ventana.mostrar("ventanaPerdedor");
                         });
                     }
                 }
@@ -100,6 +128,7 @@ public class Tablero extends JPanel {
                 JOptionPane.showMessageDialog(this, "❌ Error de conexión con el servidor.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }).start();
+        // -------------------------------------------------------------------------------------------------------------
     }
 
     private JPanel crearPanelSuperior() {
@@ -162,6 +191,30 @@ public class Tablero extends JPanel {
         btnDesdeLista.addActionListener(e -> seleccionarDesdeLista());
         btnAleatorio.addActionListener(e -> seleccionarAleatoriamente());
 
+        JButton btnAdivinar = new JButton("🎯 Adivinar personaje");
+        btnAdivinar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnAdivinar.setMaximumSize(new Dimension(180, 35));
+        btnAdivinar.setFocusable(false);
+        btnAdivinar.setFont(new Font("SansSerif", Font.PLAIN, 13));
+
+        btnAdivinar.addActionListener(e -> {
+            if (!personajeYaElegido) {
+                JOptionPane.showMessageDialog(this, "Primero selecciona tu personaje secreto.");
+                return;
+            }
+
+            /*if (!esMiTurno) {
+                JOptionPane.showMessageDialog(this, "Espera tu turno para adivinar.");
+                return;
+            }*/
+
+            JOptionPane.showMessageDialog(this, "Selecciona un personaje del tablero para intentar adivinar.");
+            modoAdivinar = true;
+        });
+        panelIzquierdo.add(Box.createVerticalStrut(20));
+        panelIzquierdo.add(btnAdivinar);
+
+
         for (JButton b : new JButton[]{btnDesdeTablero, btnDesdeLista, btnAleatorio}) {
             b.setAlignmentX(Component.CENTER_ALIGNMENT);
             b.setMaximumSize(new Dimension(180, 35));
@@ -202,6 +255,63 @@ public class Tablero extends JPanel {
             imagen.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    if (modoAdivinar) {
+                        modoAdivinar = false; // 🔁 se desactiva después de usarlo
+
+                        // Validar si ya tienes personaje del rival
+                        String personajeRival = GameDataCliente.getPersonajeRival();
+                        if (personajeRival == null) {
+                            JOptionPane.showMessageDialog(Tablero.this,
+                                    "El rival aún no ha seleccionado su personaje.",
+                                    "Espera un momento",
+                                    JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+
+                        int confirm = JOptionPane.showConfirmDialog(
+                                Tablero.this,
+                                "¿Quieres adivinar que este es el personaje del oponente?",
+                                "Confirmar Adivinanza",
+                                JOptionPane.YES_NO_OPTION
+                        );
+
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            System.out.println("🔍 Intentaste adivinar: " + p.getNombre());
+                            // Luego aquí se compara con personajeRival
+                        }
+
+                        String adivinanza = p.getNombre().trim();
+
+                        if (adivinanza.equalsIgnoreCase(personajeRival)) {
+                            System.out.println("✅ ¡Has adivinado correctamente!");
+                            yaFinalizoPartida = true;
+
+                            // Avisar al servidor que ya terminó la partida y como RESULTADO:GANE
+                            try {
+                                GameDataCliente.getConexion().enviar("RESULTADO:GANE");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            vidas--;
+                            System.out.println("❌ Fallaste. Te quedan " + vidas + " vidas.");
+
+                            if (vidas <= 0) {
+                                yaFinalizoPartida = true;
+                                System.out.println("💀 Te has quedado sin intentos.");
+                                // Aquí avisamos al servidor que perdí y como "RESULTADO:PERDI"
+                                try {
+                                    GameDataCliente.getConexion().enviar("RESULTADO:PERDI");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+
+
+                        return;
+                    }
+
                     if (enableTablero && !personajeYaElegido) {
                         seleccionarPersonaje(p);
                         return;
@@ -420,6 +530,18 @@ public class Tablero extends JPanel {
             if (seleccionado != null) {
                 seleccionarPersonaje(seleccionado); // Reutilizamos método
             }
+        }
+    }
+
+    private void reproducirSonido(String ruta) {
+        try {
+            File archivo = new File(ruta);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(archivo);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

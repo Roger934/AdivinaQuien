@@ -19,6 +19,9 @@ public class VentanaPrincipal extends JFrame {
         contenedor.add(new Creditos(this), "creditos");
         contenedor.add(new RegistroJugador(this), "registroJugador");
         contenedor.add(new VentanaJugar(this), "ventanaJugar");
+        contenedor.add(new VentanaGanador(this), "ventanaGanador");
+        contenedor.add(new VentanaPerdedor(this), "ventanaPerdedor");
+
 
         setTitle("Adivina Quién");
         setSize(1280, 720);
