@@ -12,6 +12,7 @@ public class GameDataCliente {
     private static String nombreRival;
     private static modelo.Personaje personajeSecreto; // Variable personaje
     private static String personajeRival;
+    private static int numeroJugador;
 
     public static String getNombreJugador() {
         return nombreJugador;
@@ -63,6 +64,15 @@ public class GameDataCliente {
 
     public static String getPersonajeRival() {
         return personajeRival;
+    }
+
+    // Turno
+    public static int getNumeroJugador() {
+        return numeroJugador;
+    }
+
+    public static void setNumeroJugador(int numero) {
+        numeroJugador = numero;
     }
 
 

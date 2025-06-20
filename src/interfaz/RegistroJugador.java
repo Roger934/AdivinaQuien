@@ -65,6 +65,9 @@ public class RegistroJugador extends JPanel {
                 conexion.enviar(nombre);
                 String respuesta = conexion.recibir();
 
+                int numeroJugador = conexion.recibirInt(); // nuevo
+                GameDataCliente.setNumeroJugador(numeroJugador); // guarda
+
                 switch (respuesta) {
                     case "OK":
                         GameDataCliente.setNombreJugador(nombre);

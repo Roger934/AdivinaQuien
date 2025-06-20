@@ -29,6 +29,11 @@ public class ClienteConexion {
         return entrada;
     }
 
+    public int recibirInt() throws IOException {
+        return entrada.readInt();
+    }
+
+
     public void cerrar() {
         try {
             socket.close();

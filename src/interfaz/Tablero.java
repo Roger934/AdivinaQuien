@@ -35,9 +35,11 @@ public class Tablero extends JPanel {
 
     private JTextArea areaChat;
 
+    // Declaramos como atributos para evitar Spam de preguntas y clicks
     private JButton btnSi;
     private JButton btnNo;
     private String preguntaPendiente = null;
+    private JButton btnPreguntar;
 
     // Adivnar
     private boolean modoAdivinar = false;
@@ -45,6 +47,12 @@ public class Tablero extends JPanel {
     // Para las vidas y finalización de la partida
     private int vidas = 3;
     private boolean yaFinalizoPartida = false;
+
+    // Turnos
+    private boolean esMiTurno = false;
+    private boolean esperandoRespuesta = false;
+    private boolean yaAdivinoEsteTurno = false;
+
 
 
     // Creación de todo el tablero
@@ -97,6 +105,7 @@ public class Tablero extends JPanel {
                             areaChat.append("Rival: " + pregunta + "\n");
                             btnSi.setEnabled(true);
                             btnNo.setEnabled(true);
+                            btnPreguntar.setEnabled(false); // Bloquea botón mientras hay pregunta pendiente
                             reproducirSonido("assets/sonidos/pregunta.wav");
                         });
                     }
@@ -106,6 +115,20 @@ public class Tablero extends JPanel {
                         SwingUtilities.invokeLater(() -> {
                             areaChat.append("Rival respondió: " + respuesta + "\n");
                             reproducirSonido("assets/sonidos/respuesta.wav");
+                        });
+                    }
+
+                    else if (mensaje.startsWith("TURNO:")) {
+                        int turno = Integer.parseInt(mensaje.substring("TURNO:".length()).trim());
+                        int miNumero = GameDataCliente.getNumeroJugador();
+
+                        esMiTurno = (turno == miNumero);
+                        System.out.println("📢 Turno actualizado. ¿Es mi turno? " + esMiTurno);
+                        yaAdivinoEsteTurno = false;
+
+                        SwingUtilities.invokeLater(() -> {
+                            // Solo bloquea preguntar si no es tu turno o hay pregunta sin responder
+                            btnPreguntar.setEnabled(esMiTurno && preguntaPendiente == null);
                         });
                     }
 
@@ -132,26 +155,81 @@ public class Tablero extends JPanel {
     }
 
     private JPanel crearPanelSuperior() {
-        JPanel panel = new JPanel(new GridLayout(2, 2));
-        panel.setBackground(new Color(245, 245, 255));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(230, 240, 255));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        JLabel miNombre = new JLabel("Jugador: " + GameDataCliente.getNombreJugador());
-        JLabel rivalNombre = new JLabel("Rival: " + GameDataCliente.getNombreRival());
-        JLabel timer = new JLabel("⏱ Tiempo: 00:00");
-        JButton musica = new JButton("🎵 Música");
+        // ---------- TÍTULO ----------
+        JLabel titulo = new JLabel("🎲 Adivina Quién 🎯", SwingConstants.CENTER);
+        titulo.setFont(new Font("SansSerif", Font.BOLD, 28));
+        titulo.setForeground(new Color(40, 60, 120));
+        panel.add(titulo, BorderLayout.NORTH);
 
-        miNombre.setFont(new Font("SansSerif", Font.BOLD, 16));
-        rivalNombre.setFont(new Font("SansSerif", Font.BOLD, 16));
-        timer.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        // ---------- PANEL IZQUIERDO: JUGADOR Y VIDAS ----------
+        JPanel panelIzquierdo = new JPanel();
+        panelIzquierdo.setOpaque(false);
+        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
 
-        panel.add(miNombre);
-        panel.add(rivalNombre);
-        panel.add(timer);
-        panel.add(musica);
+        JLabel lblJugador = new JLabel("Jugador: " + GameDataCliente.getNombreJugador());
+        lblJugador.setFont(new Font("SansSerif", Font.BOLD, 16));
+        lblJugador.setForeground(new Color(20, 40, 90));
+
+        JPanel panelVidas = crearPanelVidas(3); // Inicialmente 3 vidas
+
+        panelIzquierdo.add(lblJugador);
+        panelIzquierdo.add(Box.createVerticalStrut(5));
+        panelIzquierdo.add(panelVidas);
+
+        // ---------- PANEL CENTRAL: VS ----------
+        JPanel panelCentral = new JPanel();
+        panelCentral.setOpaque(false);
+        JLabel vs = new JLabel("VS", SwingConstants.CENTER);
+        vs.setFont(new Font("Impact", Font.PLAIN, 28));
+        vs.setForeground(new Color(200, 50, 50));
+        panelCentral.add(vs);
+
+        // ---------- PANEL DERECHO: FECHA, TIMER, RIVAL ----------
+        JPanel panelDerecho = new JPanel();
+        panelDerecho.setOpaque(false);
+        panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
+
+        JLabel lblFecha = new JLabel("📅 " + java.time.LocalDate.now());
+        lblFecha.setFont(new Font("SansSerif", Font.PLAIN, 14));
+
+        JLabel lblTimer = new JLabel("⏱ Tiempo: 00:00");
+        lblTimer.setFont(new Font("Monospaced", Font.BOLD, 16));
+
+        JLabel lblRival = new JLabel("Rival: " + GameDataCliente.getNombreRival());
+        lblRival.setFont(new Font("SansSerif", Font.BOLD, 16));
+        lblRival.setForeground(new Color(120, 30, 30));
+
+        panelDerecho.add(lblFecha);
+        panelDerecho.add(Box.createVerticalStrut(5));
+        panelDerecho.add(lblTimer);
+        panelDerecho.add(Box.createVerticalStrut(5));
+        panelDerecho.add(lblRival);
+
+        // ---------- ENSAMBLADO ----------
+        panel.add(panelIzquierdo, BorderLayout.WEST);
+        panel.add(panelCentral, BorderLayout.CENTER);
+        panel.add(panelDerecho, BorderLayout.EAST);
 
         return panel;
     }
+
+    // Método auxiliar para mostrar corazones
+    private JPanel crearPanelVidas(int vidas) {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        for (int i = 0; i < vidas; i++) {
+            ImageIcon corazon = new ImageIcon("assets/iconos/corazon.png");
+            Image img = corazon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+            JLabel lbl = new JLabel(new ImageIcon(img));
+            panel.add(lbl);
+        }
+        return panel;
+    }
+
 
     private JPanel crearPanelIzquierdo() {
         JPanel panelIzquierdo = new JPanel();
@@ -198,18 +276,24 @@ public class Tablero extends JPanel {
         btnAdivinar.setFont(new Font("SansSerif", Font.PLAIN, 13));
 
         btnAdivinar.addActionListener(e -> {
+            if (yaAdivinoEsteTurno) {
+                JOptionPane.showMessageDialog(this, "Solo puedes intentar adivinar una vez por turno.");
+                return;
+            }
+
             if (!personajeYaElegido) {
                 JOptionPane.showMessageDialog(this, "Primero selecciona tu personaje secreto.");
                 return;
             }
 
-            /*if (!esMiTurno) {
+            if (!esMiTurno) {
                 JOptionPane.showMessageDialog(this, "Espera tu turno para adivinar.");
                 return;
-            }*/
+            }
 
             JOptionPane.showMessageDialog(this, "Selecciona un personaje del tablero para intentar adivinar.");
             modoAdivinar = true;
+            yaAdivinoEsteTurno = true; // marca que ya intentó adivina
         });
         panelIzquierdo.add(Box.createVerticalStrut(20));
         panelIzquierdo.add(btnAdivinar);
@@ -369,10 +453,16 @@ public class Tablero extends JPanel {
         JTextField campoPreguntaLibre = new JTextField();
         campoPreguntaLibre.setMaximumSize(new Dimension(250, 30));
 
-        JButton btnPreguntar = new JButton("💬 Hacer pregunta");
+        btnPreguntar = new JButton("💬 Hacer pregunta");
         btnPreguntar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         btnPreguntar.addActionListener(e -> {
+            if (esperandoRespuesta) {
+                JOptionPane.showMessageDialog(this, "Debes esperar la respuesta del oponente.");
+                return;
+            }
+
+
             if (!personajeYaElegido) {
                 JOptionPane.showMessageDialog(this, "Primero selecciona tu personaje.");
                 return;
@@ -388,6 +478,11 @@ public class Tablero extends JPanel {
             String preguntaFinal = !preguntaLibre.isEmpty() ? preguntaLibre :
                     ("--- Seleccione una pregunta ---".equals(seleccionCombo) ? "" : seleccionCombo);
 
+            if (!esMiTurno) {
+                JOptionPane.showMessageDialog(this, "Espera tu turno.");
+                return;
+            }
+
             if (preguntaFinal.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Selecciona o escribe una pregunta válida.");
                 return;
@@ -396,6 +491,7 @@ public class Tablero extends JPanel {
             try {
                 GameDataCliente.getConexion().enviar("PREGUNTA:" + preguntaFinal);
                 areaChat.append("Tú: " + preguntaFinal + "\n");
+                esperandoRespuesta = true; // 🔒 bloquea nuevas preguntas
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -435,16 +531,15 @@ public class Tablero extends JPanel {
         try {
             GameDataCliente.getConexion().enviar("RESPUESTA:" + respuesta);
             areaChat.append("Tú respondiste: " + respuesta + "\n");
+            esperandoRespuesta = false;
+            preguntaPendiente = null;
+            btnPreguntar.setEnabled(esMiTurno);
         } catch (IOException e) {
             e.printStackTrace();
         }
         btnSi.setEnabled(false);
         btnNo.setEnabled(false);
-        preguntaPendiente = null;
     }
-
-
-
 
     private void activarSeleccion() {
         enableTablero = true;
@@ -544,6 +639,4 @@ public class Tablero extends JPanel {
             e.printStackTrace();
         }
     }
-
-
 }
