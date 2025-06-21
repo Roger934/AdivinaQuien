@@ -65,6 +65,10 @@ public class Tablero extends JPanel {
     // Fecha
     private LocalDate fechaPartida;
 
+    // Musica
+    private Clip musicaClip;
+    private boolean musicaActiva = true;
+    private JButton btnMusica;
 
     // Extras:
     private JPanel vidasPanel;
@@ -177,6 +181,10 @@ public class Tablero extends JPanel {
 
                         partida.guardarEnBaseDeDatos();
 
+                        if (musicaClip != null) {
+                            musicaClip.stop();
+                        }
+
                         SwingUtilities.invokeLater(() -> {
                             ventana.mostrar("ventanaGanador");
                         });
@@ -184,6 +192,10 @@ public class Tablero extends JPanel {
 
                     else if (mensaje.equalsIgnoreCase("PERDISTE")) {
                         System.out.println("😞 Has perdido la partida.");
+                        if (musicaClip != null) {
+                            musicaClip.stop();
+                        }
+
                         SwingUtilities.invokeLater(() -> {
                             ventana.mostrar("ventanaPerdedor");
                         });
@@ -209,21 +221,32 @@ public class Tablero extends JPanel {
             int minutos = (int) ((transcurrido / 1000) / 60);
 
             lblTimer.setText(String.format("⏱ Tiempo: %02d:%02d", minutos, segundos));
+
         });
         timerPartida.start();
+        iniciarMusica();
+
     }
 
     //__________________________________SUPERIOR__________________________
-
     private JPanel crearPanelSuperior() {
         JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(230, 240, 255));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // ---------- ESQUINA SUPERIOR DERECHA: FECHA Y TIEMPO ----------
+        // ---------- Panel de arriba: botón música, fecha, tiempo ----------
         JPanel panelFechaHora = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panelFechaHora.setOpaque(false);
+
+        // 🔧 Botón música escalado (rutas absolutas)
+        btnMusica = new JButton(cargarYEscalar("C:/AdivinaQuien/assets/iconos/pause.png", 32, 32));
+        btnMusica.setPreferredSize(new Dimension(32, 32));
+        btnMusica.setFocusPainted(false);
+        btnMusica.setContentAreaFilled(false);
+        btnMusica.setBorderPainted(false);
+        btnMusica.setToolTipText("Pausar/Reproducir música");
+        btnMusica.addActionListener(e -> toggleMusica());
 
         JLabel lblFecha = new JLabel("📅 " + java.time.LocalDate.now());
         lblFecha.setFont(new Font("SansSerif", Font.PLAIN, 13));
@@ -231,22 +254,22 @@ public class Tablero extends JPanel {
         lblTimer = new JLabel("⏱ Tiempo: 00:00");
         lblTimer.setFont(new Font("Monospaced", Font.BOLD, 13));
 
+        panelFechaHora.add(btnMusica);
+        panelFechaHora.add(Box.createHorizontalStrut(20));
         panelFechaHora.add(lblFecha);
         panelFechaHora.add(Box.createHorizontalStrut(10));
         panelFechaHora.add(lblTimer);
-        panel.add(panelFechaHora, BorderLayout.NORTH);
 
-        // ---------- TÍTULO CENTRADO ----------
+        // ---------- Título ----------
         JLabel titulo = new JLabel("🎲 Adivina Quién 🎯", SwingConstants.CENTER);
         titulo.setFont(new Font("SansSerif", Font.BOLD, 28));
         titulo.setForeground(new Color(40, 60, 120));
-        panel.add(titulo, BorderLayout.CENTER);
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ---------- PANEL INFERIOR: JUGADOR - VS - RIVAL ----------
+        // ---------- Inferior: jugador VS rival ----------
         JPanel panelInferior = new JPanel(new GridLayout(1, 3));
         panelInferior.setOpaque(false);
 
-        // Jugador y vidas
         JPanel panelJugador = new JPanel();
         panelJugador.setOpaque(false);
         panelJugador.setLayout(new BoxLayout(panelJugador, BoxLayout.Y_AXIS));
@@ -256,13 +279,11 @@ public class Tablero extends JPanel {
         lblJugador.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblJugador.setForeground(new Color(20, 40, 90));
 
-        vidasPanel = crearPanelVidas(vidas); // asignamos a variable global para actualizar
-
+        vidasPanel = crearPanelVidas(vidas);
         panelJugador.add(lblJugador);
         panelJugador.add(Box.createVerticalStrut(5));
         panelJugador.add(vidasPanel);
 
-        // VS en medio
         JPanel panelCentral = new JPanel();
         panelCentral.setOpaque(false);
         JLabel vs = new JLabel("VS", SwingConstants.CENTER);
@@ -270,7 +291,6 @@ public class Tablero extends JPanel {
         vs.setForeground(new Color(200, 50, 50));
         panelCentral.add(vs);
 
-        // Rival nombre
         JPanel panelRival = new JPanel();
         panelRival.setOpaque(false);
         JLabel lblRival = new JLabel("Rival: " + GameDataCliente.getNombreRival(), SwingConstants.CENTER);
@@ -282,7 +302,13 @@ public class Tablero extends JPanel {
         panelInferior.add(panelCentral);
         panelInferior.add(panelRival);
 
-        panel.add(panelInferior, BorderLayout.SOUTH);
+        // Añadir todos en orden
+        panel.add(panelFechaHora);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(titulo);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(panelInferior);
+
         return panel;
     }
 
@@ -720,4 +746,42 @@ public class Tablero extends JPanel {
             e.printStackTrace();
         }
     }
+
+    private void iniciarMusica() {
+        try {
+            File archivo = new File("assets/musica/Undertale.wav");
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(archivo);
+            musicaClip = AudioSystem.getClip();
+            musicaClip.open(audioStream);
+            musicaClip.loop(Clip.LOOP_CONTINUOUSLY);
+            musicaClip.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void toggleMusica() {
+        if (musicaClip == null) return;
+
+        if (musicaActiva) {
+            musicaClip.stop();
+            btnMusica.setIcon(cargarYEscalar("C:/AdivinaQuien/assets/iconos/play.png", 32, 32));
+        } else {
+            musicaClip.start();
+            musicaClip.loop(Clip.LOOP_CONTINUOUSLY);
+            btnMusica.setIcon(cargarYEscalar("C:/AdivinaQuien/assets/iconos/pause.png", 32, 32));
+        }
+
+        musicaActiva = !musicaActiva;
+    }
+
+
+    private ImageIcon cargarYEscalar(String ruta, int ancho, int alto) {
+        ImageIcon icono = new ImageIcon(ruta);
+        Image img = icono.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+        return new ImageIcon(img);
+    }
+
+
+
 }

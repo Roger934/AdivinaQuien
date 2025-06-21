@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class Cliente {
-    private static final String IP_SERVIDOR = "127.0.0.1"; // Cambia por IP real en otra máquina
+    private static final String IP_SERVIDOR = "192.168.1.100"; // 127.0.0.1 -> Cambia por IP real en otra máquina
     private static final int PUERTO = 5000;
 
     public static void main(String[] args) {

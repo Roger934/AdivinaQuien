@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class RegistroJugador extends JPanel {
 
-    private static final String IP_SERVIDOR = "127.0.0.1";
+    private static final String IP_SERVIDOR = "192.168.1.100";
     private static final int PUERTO = 5000;
 
     public RegistroJugador(VentanaPrincipal ventana) {
