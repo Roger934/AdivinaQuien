@@ -5,77 +5,50 @@ import cliente.ClienteConexion;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 
 public class MenuPrincipal extends JPanel {
+
+    private Image fondo;
+
     public MenuPrincipal(VentanaPrincipal ventana) {
-        setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 255));
+        setLayout(null);
+        fondo = new ImageIcon("assets/fondos/menu.png").getImage();
 
-        JPanel contenido = new JPanel();
-        contenido.setLayout(new BoxLayout(contenido, BoxLayout.Y_AXIS));
-        contenido.setBackground(new Color(245, 245, 255));
+        // Colores
+        Color colorRegistro = new Color(255, 160, 0);
+        Color colorInstrucciones = new Color(129, 199, 90);
+        Color colorCreditos = new Color(140, 55, 255);
+        Color colorRegistros = new Color(30, 90, 255);
+        Color colorVolver = new Color(255, 0, 27);
 
-        JLabel titulo = new JLabel("Menú Principal");
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 36));
-        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titulo.setBorder(BorderFactory.createEmptyBorder(60, 0, 40, 0));
-
-        JButton registro = crearBoton("Registro de Jugadores", new Color(255, 204, 102));
+        JButton registro = crearBoton("Registro de Jugadores", colorRegistro);
+        registro.setBounds(300, 285, 280, 45);
         registro.addActionListener(e -> ventana.mostrar("registro"));
+        add(registro);
 
-        JButton instrucciones = crearBoton("Instrucciones", new Color(186, 238, 150));
+        JButton instrucciones = crearBoton("Instrucciones", colorInstrucciones);
+        instrucciones.setBounds(250, 435, 280, 45);
         instrucciones.addActionListener(e -> ventana.mostrar("instrucciones"));
+        add(instrucciones);
 
-        JButton creditos = crearBoton("Créditos", new Color(186, 143, 255));
+        JButton creditos = crearBoton("Créditos", colorCreditos);
+        creditos.setBounds(730, 435, 280, 45);
         creditos.addActionListener(e -> ventana.mostrar("creditos"));
+        add(creditos);
 
-        JButton verRegistros = crearBoton("Ver registros", new Color(100, 149, 237));
+        JButton verRegistros = crearBoton("Ver registros", colorRegistros);
+        verRegistros.setBounds(680, 285, 280, 45);
         verRegistros.addActionListener(e -> {
-            ventana.getVerRegistros().cargarDesdeBoton();  // llama al método público
-            ventana.mostrar("verRegistros");               // cambia de pantalla
+            ventana.getVerRegistros().cargarDesdeBoton();
+            ventana.mostrar("verRegistros");
         });
+        add(verRegistros);
 
-
-        contenido.add(titulo);
-        contenido.add(registro);
-        contenido.add(Box.createVerticalStrut(20));
-        contenido.add(instrucciones);
-        contenido.add(Box.createVerticalStrut(20));
-        contenido.add(creditos);
-        contenido.add(Box.createVerticalStrut(20));
-        contenido.add(verRegistros);
-
-        add(contenido, BorderLayout.CENTER);
-
-        // Botón inferior derecho para volver al inicio
-        JButton volver = new JButton("Inicio") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(255, 182, 193));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 45, 45);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-            @Override
-            protected void paintBorder(Graphics g) {}
-        };
+        JButton volver = crearBoton("Inicio", colorVolver);
+        volver.setBounds(1100, 620, 150, 40);
         volver.setFont(new Font("SansSerif", Font.BOLD, 18));
-        volver.setForeground(Color.WHITE);
-        volver.setFocusPainted(false);
-        volver.setContentAreaFilled(false);
-        volver.setOpaque(false);
-        volver.setPreferredSize(new Dimension(150, 40));
-        volver.setMaximumSize(new Dimension(150, 40));
         volver.addActionListener(e -> ventana.mostrar("presentacion"));
-
-        JPanel pie = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pie.setBackground(new Color(245, 245, 255));
-        pie.add(volver);
-
-        add(pie, BorderLayout.SOUTH);
+        add(volver);
     }
 
     private JButton crearBoton(String texto, Color color) {
@@ -84,22 +57,39 @@ public class MenuPrincipal extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Relleno del botón
                 g2.setColor(color);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 45, 45);
+
+                // Borde blanco
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 45, 45);
+
                 g2.dispose();
                 super.paintComponent(g);
             }
+
             @Override
-            protected void paintBorder(Graphics g) {}
+            protected void paintBorder(Graphics g) {
+                // Se desactiva el borde predeterminado
+            }
         };
+
         boton.setFont(new Font("SansSerif", Font.BOLD, 20));
         boton.setForeground(Color.WHITE);
         boton.setFocusPainted(false);
         boton.setContentAreaFilled(false);
         boton.setOpaque(false);
-        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setPreferredSize(new Dimension(300, 50));
-        boton.setMaximumSize(new Dimension(300, 50));
+        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return boton;
+    }
+
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
     }
 }

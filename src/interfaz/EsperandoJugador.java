@@ -12,105 +12,112 @@ import java.util.List;
 
 public class EsperandoJugador extends JPanel {
 
-    private JLabel mensaje;
+    private Image fondo;
+    private JLabel gifLabel;
+    private JLabel puntosLabel;
     private int puntos = 1;
+
     boolean recibioIniciar = false;
     boolean recibioDatos = false;
     List<Integer> ids = new ArrayList<>();
 
     public EsperandoJugador(VentanaPrincipal ventana) {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(245, 245, 255));
-        setBorder(BorderFactory.createEmptyBorder(50, 0, 50, 0));
+        setLayout(null);
+        fondo = new ImageIcon("assets/fondos/esperando.png").getImage();
 
-        // PANEL GIF
-        JPanel gifPanel = new JPanel();
-        gifPanel.setBackground(new Color(245, 245, 255));
-        gifPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        // GIF separado
+        ImageIcon gifIcon = new ImageIcon("assets/gifs/esperando.gif");
+        gifLabel = new JLabel(gifIcon);
+        gifLabel.setBounds(780, 230, gifIcon.getIconWidth(), gifIcon.getIconHeight());
+        add(gifLabel);
 
-        ImageIcon gif = new ImageIcon("assets/gifs/esperando.gif");
-        JLabel gifLabel = new JLabel(gif);
-        gifPanel.add(gifLabel);
-        add(gifPanel);
+        // Texto de puntos (con fuente más estilizada)
+        puntosLabel = new JLabel("Esperando");
+        puntosLabel.setFont(new Font("Impact", Font.BOLD, 35));
+        puntosLabel.setForeground(Color.WHITE);
+        puntosLabel.setBounds(100, 570, 400, 50); // Centrado manual
+        add(puntosLabel);
 
-        add(Box.createRigidArea(new Dimension(0, 20)));
-
-        // PANEL MENSAJE
-        JPanel mensajePanel = new JPanel();
-        mensajePanel.setBackground(new Color(245, 245, 255));
-        mensajePanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-
-        mensaje = new JLabel("Esperando al segundo jugador...");
-        mensaje.setFont(new Font("SansSerif", Font.BOLD, 24));
-        mensaje.setPreferredSize(new Dimension(500, 40));
-        mensaje.setHorizontalAlignment(SwingConstants.CENTER);
-        mensajePanel.add(mensaje);
-        add(mensajePanel);
-
-        // Animación con puntos
+        // Animación de puntos
         Timer timer = new Timer(500, e -> {
-            StringBuilder texto = new StringBuilder("Esperando al segundo jugador");
-            for (int i = 0; i < puntos; i++) {
-                texto.append(".");
-            }
-            mensaje.setText(texto.toString());
+            StringBuilder texto = new StringBuilder("Esperando");
+            for (int i = 0; i < puntos; i++) texto.append(".");
+            puntosLabel.setText(texto.toString());
             puntos = (puntos % 3) + 1;
         });
         timer.start();
+
+        // Botón Cancelar centrado en X (en una ventana de 1280px)
+        int botonAncho = 180;
+        int posX = 1000;//(1280 - botonAncho) / 2;
+
+        JButton cancelar = new JButton("Cancelar") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(220, 50, 50)); // rojo fuerte
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 45, 45);
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 45, 45);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {}
+        };
+
+        cancelar.setFont(new Font("SansSerif", Font.BOLD, 18));
+        cancelar.setForeground(Color.WHITE);
+        cancelar.setFocusPainted(false);
+        cancelar.setContentAreaFilled(false);
+        cancelar.setOpaque(false);
+        cancelar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancelar.setBounds(posX, 600, botonAncho, 45);
+        cancelar.addActionListener(e -> ventana.mostrar("menu"));
+        add(cancelar);
 
         // Hilo para escuchar mensajes del servidor
         new Thread(() -> {
             try {
                 ClienteConexion conexion = GameDataCliente.getConexion();
-                if (conexion == null) {
-                    System.err.println("Error: La conexión es null en EsperandoJugador.");
-                    return;
-                }
-
+                if (conexion == null) return;
                 DataInputStream in = conexion.getEntrada();
 
                 while (!(recibioIniciar && recibioDatos)) {
                     String msg = in.readUTF();
 
                     if (msg.startsWith("RIVAL:")) {
-                        String rival = msg.substring(6).trim();
-                        System.out.println("🎮 Rival recibido: " + rival);
-                        GameDataCliente.setNombreRival(rival);
-
+                        GameDataCliente.setNombreRival(msg.substring(6).trim());
                     } else if (msg.startsWith("DATOS:")) {
                         String datos = msg.substring(6).replaceAll("[\\[\\]\\s]", "");
-                        String[] partes = datos.split(",");
-                        for (String s : partes) {
+                        for (String s : datos.split(",")) {
                             try {
                                 ids.add(Integer.parseInt(s));
-                            } catch (NumberFormatException e) {
-                                System.out.println("Número inválido recibido: " + s);
-                            }
+                            } catch (NumberFormatException ignored) {}
                         }
-                        System.out.println("🎯 IDs recibidos del servidor:");
-                        System.out.println(ids);
                         GameDataCliente.setListaPersonajes(ids);
                         recibioDatos = true;
-
                     } else if ("INICIAR".equals(msg)) {
-                        System.out.println("✅ Señal INICIAR recibida.");
                         recibioIniciar = true;
                     }
                 }
 
-                // Ya podemos cambiar de pantalla
                 SwingUtilities.invokeLater(() -> ventana.mostrarTablero());
+
             } catch (IOException e) {
-                e.printStackTrace();
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                        this,
-                        "Se perdió la conexión con el servidor.",
-                        "Error de conexión",
-                        JOptionPane.ERROR_MESSAGE
+                        this, "Se perdió la conexión con el servidor.", "Error", JOptionPane.ERROR_MESSAGE
                 ));
             }
         }).start();
+    }
 
-        add(Box.createRigidArea(new Dimension(0, 30)));
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
     }
 }

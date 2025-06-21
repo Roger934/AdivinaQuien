@@ -3,46 +3,49 @@ package interfaz;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class PantallaPresentacion extends JPanel {
+
+    private Image fondo;
+
     public PantallaPresentacion(VentanaPrincipal ventana) {
-        setBackground(new Color(230, 240, 255));
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(null); // Para usar coordenadas absolutas
+        fondo = new ImageIcon("assets/fondos/portada.png").getImage();
 
-        JLabel titulo = new JLabel("ADIVINA QUIÉN");
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 48));
-        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titulo.setBorder(BorderFactory.createEmptyBorder(100, 0, 50, 0));
-
-        JButton botonComenzar = crearBoton("Menú Principal", new Color(186, 143, 255));
-        botonComenzar.addActionListener(e -> ventana.mostrar("menu"));
-
-        add(titulo);
-        add(botonComenzar);
-    }
-
-    private JButton crearBoton(String texto, Color color) {
-        JButton boton = new JButton(texto) {
+        // Crear botón personalizado estilo "EMPEZAR"
+        JButton botonEmpezar = new JButton("EMPEZAR  ➜") {
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
+                Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(color);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 45, 45);
-                g2.dispose();
+                g2.setColor(new Color(255, 66, 66)); // Rojo vivo
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 50, 50);
                 super.paintComponent(g);
             }
+
             @Override
-            protected void paintBorder(Graphics g) {}
+            protected void paintBorder(Graphics g) {
+                // Sin borde
+            }
         };
-        boton.setFont(new Font("SansSerif", Font.BOLD, 22));
-        boton.setForeground(Color.WHITE);
-        boton.setFocusPainted(false);
-        boton.setContentAreaFilled(false);
-        boton.setOpaque(false);
-        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setPreferredSize(new Dimension(200, 50));
-        boton.setMaximumSize(new Dimension(200, 50));
-        return boton;
+
+        botonEmpezar.setFont(new Font("SansSerif", Font.BOLD, 16));
+        botonEmpezar.setForeground(Color.BLACK);
+        botonEmpezar.setFocusPainted(false);
+        botonEmpezar.setContentAreaFilled(false);
+        botonEmpezar.setOpaque(false);
+        botonEmpezar.setBounds(1000, 550, 200, 45); // Posición y tamaño personalizable
+
+        botonEmpezar.addActionListener(e -> ventana.mostrar("menu"));
+
+        add(botonEmpezar);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawImage(fondo, 0, 0, getWidth(), getHeight(), this); // Fondo escalado
     }
 }
