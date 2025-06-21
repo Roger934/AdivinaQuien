@@ -1,8 +1,11 @@
 // MenuPrincipal.java
 package interfaz;
 
+import cliente.ClienteConexion;
+
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 public class MenuPrincipal extends JPanel {
     public MenuPrincipal(VentanaPrincipal ventana) {
@@ -27,12 +30,21 @@ public class MenuPrincipal extends JPanel {
         JButton creditos = crearBoton("Créditos", new Color(186, 143, 255));
         creditos.addActionListener(e -> ventana.mostrar("creditos"));
 
+        JButton verRegistros = crearBoton("Ver registros", new Color(100, 149, 237));
+        verRegistros.addActionListener(e -> {
+            ventana.getVerRegistros().cargarDesdeBoton();  // llama al método público
+            ventana.mostrar("verRegistros");               // cambia de pantalla
+        });
+
+
         contenido.add(titulo);
         contenido.add(registro);
         contenido.add(Box.createVerticalStrut(20));
         contenido.add(instrucciones);
         contenido.add(Box.createVerticalStrut(20));
         contenido.add(creditos);
+        contenido.add(Box.createVerticalStrut(20));
+        contenido.add(verRegistros);
 
         add(contenido, BorderLayout.CENTER);
 

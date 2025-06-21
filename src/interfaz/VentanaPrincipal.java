@@ -7,6 +7,8 @@ import java.awt.*;
 public class VentanaPrincipal extends JFrame {
     private CardLayout layout;
     private JPanel contenedor;
+    private VerRegistros verRegistros;
+
 
     public VentanaPrincipal() {
         layout = new CardLayout();
@@ -21,6 +23,10 @@ public class VentanaPrincipal extends JFrame {
         contenedor.add(new VentanaJugar(this), "ventanaJugar");
         contenedor.add(new VentanaGanador(this), "ventanaGanador");
         contenedor.add(new VentanaPerdedor(this), "ventanaPerdedor");
+        // Tabla para los registros
+        verRegistros = new VerRegistros(this);
+        contenedor.add(verRegistros, "verRegistros");
+
 
 
         setTitle("Adivina Quién");
@@ -43,6 +49,10 @@ public class VentanaPrincipal extends JFrame {
     public void mostrarTablero() {
         contenedor.add(new Tablero(this), "tablero");
         mostrar("tablero");
+    }
+
+    public VerRegistros getVerRegistros() {
+        return verRegistros;
     }
 
     public static void main(String[] args) {
