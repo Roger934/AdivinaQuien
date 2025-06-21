@@ -33,12 +33,16 @@ public class ClienteConexion {
         return entrada.readInt();
     }
 
-
     public void cerrar() {
         try {
-            socket.close();
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+            if (entrada != null) entrada.close();
+            if (salida != null) salida.close();
+            System.out.println("🔌 Conexión cerrada correctamente.");
         } catch (IOException e) {
-            System.out.println("Error al cerrar socket: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

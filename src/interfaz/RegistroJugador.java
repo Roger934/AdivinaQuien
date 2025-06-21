@@ -62,6 +62,7 @@ public class RegistroJugador extends JPanel {
 
             try {
                 ClienteConexion conexion = new ClienteConexion(IP_SERVIDOR, PUERTO);
+                conexion.enviar("LISTO");
                 conexion.enviar(nombre);
                 String respuesta = conexion.recibir();
 

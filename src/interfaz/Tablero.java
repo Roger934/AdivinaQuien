@@ -170,16 +170,20 @@ public class Tablero extends JPanel {
                         String jugador2 = GameDataCliente.getNombreRival();
                         String personajeGanador = GameDataCliente.getPersonajeSecreto().getNombre(); // ya está seleccionado por el jugador actual
 
-                        RegistroPartida partida = new RegistroPartida(
+                        // Construir mensaje y enviar al servidor para guardar la partida
+                        String datos = String.format("GUARDAR_PARTIDA:%s;%s;%s;%s;%s;%s",
                                 jugador1,
                                 jugador2,
-                                jugador1, // el ganador es este cliente
+                                jugador1,
                                 personajeGanador,
-                                fechaPartida,
-                                duracionFinal
-                        );
+                                fechaPartida.toString(),
+                                duracionFinal.toString());
 
-                        partida.guardarEnBaseDeDatos();
+                        try {
+                            GameDataCliente.getConexion().enviar(datos);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         if (musicaClip != null) {
                             musicaClip.stop();
@@ -199,6 +203,24 @@ public class Tablero extends JPanel {
                         SwingUtilities.invokeLater(() -> {
                             ventana.mostrar("ventanaPerdedor");
                         });
+                    }
+
+                    else if (mensaje.equals("DESCONEXION_RIVAL")) {
+                        System.out.println("❌ El rival se ha desconectado. Partida cancelada.");
+
+                        if (musicaClip != null) {
+                            musicaClip.stop();
+                        }
+
+                        JOptionPane.showMessageDialog(this,
+                                "El rival se ha desconectado.\nLa partida se ha cancelado.",
+                                "Desconexión del rival",
+                                JOptionPane.WARNING_MESSAGE
+                        );
+
+                        GameDataCliente.getConexion().cerrar();  // Cerramos el socket
+                        GameDataCliente.limpiar();     // Limpiamos el registro
+                        ventana.mostrar("registroJugador"); // Vuelve a la pantalla inicial
                     }
                 }
             } catch (IOException e) {

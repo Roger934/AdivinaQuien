@@ -79,5 +79,11 @@ public class GameDataCliente {
     public static void limpiar() {
         nombreJugador = null;
         conexion = null;
+        listaPersonajes = null;
+        nombreRival = null;
+        personajeSecreto = null;
+        personajeRival = null;
+        numeroJugador = 0;
     }
+
 }
