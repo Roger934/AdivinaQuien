@@ -196,7 +196,10 @@ public class Tablero extends JPanel {
                         }
 
                         SwingUtilities.invokeLater(() -> {
+                            VentanaGanador panelGanador = new VentanaGanador(ventana, jugador1);
+                            ventana.getContenedor().add(panelGanador, "ventanaGanador");
                             ventana.mostrar("ventanaGanador");
+
                         });
                     }
 
@@ -207,6 +210,8 @@ public class Tablero extends JPanel {
                         }
 
                         SwingUtilities.invokeLater(() -> {
+                            String perdedor = GameDataCliente.getNombreJugador();
+                            ventana.getContenedor().add(new VentanaPerdedor(ventana, perdedor), "ventanaPerdedor");
                             ventana.mostrar("ventanaPerdedor");
                         });
                     }
@@ -224,8 +229,8 @@ public class Tablero extends JPanel {
                                 JOptionPane.WARNING_MESSAGE
                         );
 
-                        GameDataCliente.getConexion().cerrar();  // Cerramos el socket
-                        GameDataCliente.limpiar();     // Limpiamos el registro
+                        //GameDataCliente.getConexion().cerrar();  // Cerramos el socket
+                        //GameDataCliente.limpiar();     // Limpiamos el registro
                         ventana.mostrar("registroJugador"); // Vuelve a la pantalla inicial
                     }
                 }
@@ -732,6 +737,7 @@ public class Tablero extends JPanel {
             }
         });
 
+        // Mandar Repuesta si no
         btnSi.addActionListener(e -> responder("SÍ", areaChat, btnSi, btnNo));
         btnNo.addActionListener(e -> responder("NO", areaChat, btnSi, btnNo));
 
@@ -921,6 +927,4 @@ public class Tablero extends JPanel {
         timer.setRepeats(false);
         timer.start();
     }
-
-
 }

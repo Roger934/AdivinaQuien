@@ -4,11 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import utils.GameDataCliente;
 
 public class VentanaPerdedor extends JPanel {
 
-    public VentanaPerdedor(VentanaPrincipal ventana) {
+    public VentanaPerdedor(VentanaPrincipal ventana, String nombrePerdedor) {
         setLayout(null);
         setPreferredSize(new Dimension(1280, 720));
 
@@ -27,7 +26,7 @@ public class VentanaPerdedor extends JPanel {
         caja.setBounds(750, 200, 480, 300); // Ajustable
         fondo.add(caja);
 
-        JLabel perdido = new JLabel("😥 Has perdido", SwingConstants.CENTER);
+        JLabel perdido = new JLabel("😥 Has perdido, " + nombrePerdedor, SwingConstants.CENTER);
         perdido.setFont(new Font("SansSerif", Font.BOLD, 30));
         perdido.setForeground(new Color(255, 255, 255));
         perdido.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -39,7 +38,6 @@ public class VentanaPerdedor extends JPanel {
 
         JButton btnVolverAJugar = crearBoton("Volver a jugar", new Color(204, 0, 0));
         btnVolverAJugar.addActionListener((ActionEvent e) -> {
-            GameDataCliente.limpiar();
             ventana.mostrar("registroJugador");
         });
 
@@ -53,7 +51,6 @@ public class VentanaPerdedor extends JPanel {
         JButton btnSalir = crearBoton("Salir", new Color(102, 102, 102));
         btnSalir.setBounds(1080, 620, 160, 50);
         btnSalir.addActionListener((ActionEvent e) -> {
-            GameDataCliente.limpiar();
             ventana.mostrar("menu");
         });
         fondo.add(btnSalir);
@@ -80,7 +77,6 @@ public class VentanaPerdedor extends JPanel {
                 g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 45, 45);
                 g2.dispose();
             }
-
         };
         boton.setFont(new Font("SansSerif", Font.BOLD, 22));
         boton.setForeground(Color.WHITE);

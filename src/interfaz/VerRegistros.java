@@ -166,7 +166,7 @@ public class VerRegistros extends JPanel {
     private void enviarConsulta(String tipo) {
         new Thread(() -> {
             try {
-                conexion = new ClienteConexion("192.168.1.100", 5000);
+                conexion = new ClienteConexion("127.0.0.1", 5000);
                 conexion.enviar(tipo);
                 String respuesta = conexion.recibir();
 

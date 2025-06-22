@@ -1,4 +1,4 @@
-package base_datos;
+package modelo;
 
 import modelo.Personaje;
 

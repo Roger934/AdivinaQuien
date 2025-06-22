@@ -10,7 +10,7 @@ public class Creditos extends JPanel {
         setBackground(new Color(240, 235, 255)); // Fondo pastel lila
 
         // TÍTULO
-        JLabel titulo = new JLabel("💜 Créditos", SwingConstants.CENTER);
+        JLabel titulo = new JLabel("Créditos", SwingConstants.CENTER);
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 36));
         titulo.setForeground(new Color(90, 50, 180));
         titulo.setBorder(BorderFactory.createEmptyBorder(30, 0, 20, 0));
@@ -38,11 +38,17 @@ public class Creditos extends JPanel {
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
         logo.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        JLabel datos = new JLabel("Universidad Autónoma de Aguascalientes · ISC 4A · Junio 2025");
+        JLabel datos = new JLabel("Universidad Autónoma de Aguascalientes · Centro de Ciencias Basicas · ISC 4A · PROGRAMACION III · 22 Junio 2025");
         datos.setFont(new Font("Segoe UI", Font.ITALIC, 16));
         datos.setForeground(new Color(90, 90, 90));
         datos.setAlignmentX(Component.CENTER_ALIGNMENT);
         datos.setBorder(BorderFactory.createEmptyBorder(5, 0, 20, 0));
+
+        JLabel datos2 = new JLabel("DOCENTE: GEORGINA SALAZAR PARTIDA");
+        datos2.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+        datos2.setForeground(new Color(90, 90, 90));
+        datos2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        datos2.setBorder(BorderFactory.createEmptyBorder(5, 0, 20, 0));
 
         JButton volver = new JButton("Volver al Menú") {
             @Override
@@ -74,6 +80,7 @@ public class Creditos extends JPanel {
 
         info.add(logo);
         info.add(datos);
+        info.add(datos2);
         info.add(volver);
 
         add(info, BorderLayout.SOUTH);

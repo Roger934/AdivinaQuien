@@ -8,7 +8,7 @@ import utils.GameDataCliente;
 
 public class VentanaGanador extends JPanel {
 
-    public VentanaGanador(VentanaPrincipal ventana) {
+    public VentanaGanador(VentanaPrincipal ventana, String nombreGanador) {
         setLayout(null);
         setPreferredSize(new Dimension(1280, 720));
 
@@ -27,7 +27,7 @@ public class VentanaGanador extends JPanel {
         caja.setBounds(70, 220, 480, 300); // Puedes ajustar X, Y aquí
         fondo.add(caja);
 
-        JLabel felicidades = new JLabel("\uD83C\uDF89 ¡Felicidades! Has ganado \uD83C\uDFC6", SwingConstants.CENTER);
+        JLabel felicidades = new JLabel("\uD83C\uDF89 ¡Felicidades! " + nombreGanador + " Has ganado \uD83C\uDFC6", SwingConstants.CENTER);
         felicidades.setFont(new Font("SansSerif", Font.BOLD, 30));
         felicidades.setForeground(new Color(51, 51, 51));
         felicidades.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -40,6 +40,7 @@ public class VentanaGanador extends JPanel {
         JButton btnVolverAJugar = crearBoton("Volver a jugar", new Color(255, 204, 0));
         btnVolverAJugar.addActionListener((ActionEvent e) -> {
             GameDataCliente.limpiar();
+            GameDataCliente.getConexion().cerrar();
             ventana.mostrar("registroJugador");
         });
 

@@ -21,8 +21,6 @@ public class VentanaPrincipal extends JFrame {
         contenedor.add(new Creditos(this), "creditos");
         contenedor.add(new RegistroJugador(this), "registroJugador");
         contenedor.add(new VentanaJugar(this), "ventanaJugar");
-        contenedor.add(new VentanaGanador(this), "ventanaGanador");
-        contenedor.add(new VentanaPerdedor(this), "ventanaPerdedor");
         // Tabla para los registros
         verRegistros = new VerRegistros(this);
         contenedor.add(verRegistros, "verRegistros");
@@ -51,6 +49,10 @@ public class VentanaPrincipal extends JFrame {
 
     public VerRegistros getVerRegistros() {
         return verRegistros;
+    }
+
+    public JPanel getContenedor() {
+        return contenedor;
     }
 
     public static void main(String[] args) {
