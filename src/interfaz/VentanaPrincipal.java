@@ -27,8 +27,6 @@ public class VentanaPrincipal extends JFrame {
         verRegistros = new VerRegistros(this);
         contenedor.add(verRegistros, "verRegistros");
 
-
-
         setTitle("Adivina Quién");
         setSize(1280, 720);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

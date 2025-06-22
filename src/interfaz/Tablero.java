@@ -252,18 +252,28 @@ public class Tablero extends JPanel {
 
     //__________________________________SUPERIOR__________________________
     private JPanel crearPanelSuperior() {
-        JPanel panel = new JPanel();
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Image bg = new ImageIcon("assets/fondos/header.png").getImage();
+                g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
+            }
+        };
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(230, 240, 255));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        panel.setPreferredSize(new Dimension(1280, 180));
+        panel.setOpaque(false);
 
-        // ---------- Panel de arriba: botón música, fecha, tiempo ----------
-        JPanel panelFechaHora = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelFechaHora.setOpaque(false);
+        // Fuente
+        Font fuenteGeneral = new Font("Segoe UI Emoji", Font.BOLD, 20);
+        Color colorTexto = Color.WHITE;
 
-        // 🔧 Botón música escalado (rutas absolutas)
-        btnMusica = new JButton(cargarYEscalar("C:/AdivinaQuien/assets/iconos/pause.png", 32, 32));
-        btnMusica.setPreferredSize(new Dimension(32, 32));
+        // --- Panel de arriba: botón música, fecha y tiempo ---
+        JPanel panelTop = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelTop.setOpaque(false);
+
+        btnMusica = new JButton(cargarYEscalar("assets/iconos/pause.png", 35, 35));
+        btnMusica.setPreferredSize(new Dimension(35, 35));
         btnMusica.setFocusPainted(false);
         btnMusica.setContentAreaFilled(false);
         btnMusica.setBorderPainted(false);
@@ -271,65 +281,57 @@ public class Tablero extends JPanel {
         btnMusica.addActionListener(e -> toggleMusica());
 
         JLabel lblFecha = new JLabel("📅 " + java.time.LocalDate.now());
-        lblFecha.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        lblFecha.setFont(fuenteGeneral);
+        lblFecha.setForeground(colorTexto);
 
         lblTimer = new JLabel("⏱ Tiempo: 00:00");
-        lblTimer.setFont(new Font("Monospaced", Font.BOLD, 13));
+        lblTimer.setFont(fuenteGeneral);
+        lblTimer.setForeground(colorTexto);
 
-        panelFechaHora.add(btnMusica);
-        panelFechaHora.add(Box.createHorizontalStrut(20));
-        panelFechaHora.add(lblFecha);
-        panelFechaHora.add(Box.createHorizontalStrut(10));
-        panelFechaHora.add(lblTimer);
+        panelTop.add(btnMusica);
+        panelTop.add(Box.createHorizontalStrut(10));
+        panelTop.add(lblFecha);
+        panelTop.add(Box.createHorizontalStrut(10));
+        panelTop.add(lblTimer);
 
-        // ---------- Título ----------
-        JLabel titulo = new JLabel("🎲 Adivina Quién 🎯", SwingConstants.CENTER);
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 28));
-        titulo.setForeground(new Color(40, 60, 120));
-        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // --- Panel inferior: nombres de jugadores ---
+        JPanel panelNombres = new JPanel(new GridLayout(1, 2));
+        panelNombres.setOpaque(false);
+        panelNombres.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
 
-        // ---------- Inferior: jugador VS rival ----------
-        JPanel panelInferior = new JPanel(new GridLayout(1, 3));
-        panelInferior.setOpaque(false);
-
+        // Jugador
         JPanel panelJugador = new JPanel();
         panelJugador.setOpaque(false);
         panelJugador.setLayout(new BoxLayout(panelJugador, BoxLayout.Y_AXIS));
 
-        JLabel lblJugador = new JLabel("Jugador: " + GameDataCliente.getNombreJugador(), SwingConstants.CENTER);
-        lblJugador.setFont(new Font("SansSerif", Font.BOLD, 16));
+        JLabel lblJugador = new JLabel("JUGADOR: " + GameDataCliente.getNombreJugador(), SwingConstants.CENTER);
+        lblJugador.setFont(fuenteGeneral);
+        lblJugador.setForeground(colorTexto);
         lblJugador.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblJugador.setForeground(new Color(20, 40, 90));
 
         vidasPanel = crearPanelVidas(vidas);
         panelJugador.add(lblJugador);
         panelJugador.add(Box.createVerticalStrut(5));
         panelJugador.add(vidasPanel);
 
-        JPanel panelCentral = new JPanel();
-        panelCentral.setOpaque(false);
-        JLabel vs = new JLabel("VS", SwingConstants.CENTER);
-        vs.setFont(new Font("Impact", Font.PLAIN, 28));
-        vs.setForeground(new Color(200, 50, 50));
-        panelCentral.add(vs);
-
+        // Rival
         JPanel panelRival = new JPanel();
         panelRival.setOpaque(false);
-        JLabel lblRival = new JLabel("Rival: " + GameDataCliente.getNombreRival(), SwingConstants.CENTER);
-        lblRival.setFont(new Font("SansSerif", Font.BOLD, 16));
-        lblRival.setForeground(new Color(120, 30, 30));
+        JLabel lblRival = new JLabel("RIVAL: " + GameDataCliente.getNombreRival(), SwingConstants.CENTER);
+        lblRival.setFont(fuenteGeneral);
+        lblRival.setForeground(colorTexto);
+
         panelRival.add(lblRival);
 
-        panelInferior.add(panelJugador);
-        panelInferior.add(panelCentral);
-        panelInferior.add(panelRival);
+        // Añadir a contenedor
+        panelNombres.add(panelJugador);
+        panelNombres.add(panelRival);
 
-        // Añadir todos en orden
-        panel.add(panelFechaHora);
+        // Añadir todo al header
         panel.add(Box.createVerticalStrut(5));
-        panel.add(titulo);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(panelInferior);
+        panel.add(panelTop);
+        panel.add(Box.createVerticalStrut(15));
+        panel.add(panelNombres);
 
         return panel;
     }
