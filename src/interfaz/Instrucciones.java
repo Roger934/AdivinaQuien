@@ -1,4 +1,3 @@
-// Instrucciones.java
 package interfaz;
 
 import javax.swing.*;
@@ -7,87 +6,133 @@ import java.awt.*;
 public class Instrucciones extends JPanel {
     public Instrucciones(VentanaPrincipal ventana) {
         setLayout(new BorderLayout());
-        setBackground(new Color(255, 245, 250)); // fondo pastel rosado
+        setBackground(new Color(235, 255, 240)); // fondo pastel verde menta
 
+        // Título
         JLabel titulo = new JLabel("Instrucciones del Juego", SwingConstants.CENTER);
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 36));
-        titulo.setForeground(new Color(140, 98, 255));
-        titulo.setBorder(BorderFactory.createEmptyBorder(30, 0, 20, 0));
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        titulo.setForeground(new Color(34, 120, 75)); // verde hoja oscuro
+        titulo.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
         add(titulo, BorderLayout.NORTH);
 
-        JPanel contenido = new JPanel();
-        contenido.setBackground(new Color(255, 255, 255));
-        contenido.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(20, 50, 20, 50),
-                BorderFactory.createLineBorder(new Color(200, 200, 255), 2)
-        ));
+        // Panel decorativo del contenido
+        JPanel contenido = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(255, 255, 255, 240));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                g2.setColor(new Color(170, 220, 170)); // borde verde suave
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 25, 25);
+            }
+        };
         contenido.setLayout(new BoxLayout(contenido, BoxLayout.Y_AXIS));
+        contenido.setOpaque(false);
+        contenido.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
 
-        JTextPane texto = new JTextPane();
-        texto.setContentType("text/html");
+        // Área de texto con scroll personalizado
+        JTextArea texto = new JTextArea();
         texto.setText("""
-<html><body style='font-family: SansSerif; font-size: 14px; text-align: center;'>
-<h2 style='color:#8860D0;'>🎯 Objetivo</h2>
-<p style='color:#333'>Adivinar correctamente el personaje secreto que tiene el oponente antes de que él adivine el tuyo.</p>
+OBJETIVO
+Adivinar correctamente el personaje secreto que tiene el oponente antes de que él adivine el tuyo.
 
-<h2 style='color:#F18F01;'>👥 Participantes</h2>
-<p style='color:#333'>Este juego se juega entre dos jugadores conectados en red local.<br>Cada jugador estará en su propia computadora.</p>
+PARTICIPANTES
+Dos jugadores en red local. Cada uno con su propia computadora.
 
-<h2 style='color:#6A994E; text-align:center;'>📘 Cómo jugar</h2>
-<ol style='color:#333; text-align: center; max-width: 800px; margin: auto;'>
-<li><b>Inicio del juego:</b> Ambos jugadores ingresan su nombre. El sistema asigna un personaje secreto.</li>
-<li><b>Tablero:</b> Verás una cuadrícula con 24 personajes únicos.</li>
-<li><b>Turnos:</b> En tu turno puedes:
-<ul style='list-style: none; padding-left: 0;'>
-<li><span style='display: inline;'>Hacer una pregunta de sí o no (Ej: ¿Tiene barba?).</span></li>
-<li>Intentar adivinar el personaje del oponente.</li>
-</ul></li>
-<li><b>Descarte:</b> Puedes hacer clic en los personajes que descartes para ocultarlos visualmente.</li>
-<li><b>Ganador:</b> Si aciertas el personaje secreto, ganas. Si fallas, pierdes.</li>
-</ol>
+CÓMO JUGAR
+1. Ambos jugadores ingresan su nombre. El sistema les asigna un personaje secreto.
+2. Verás una cuadrícula con 24 personajes únicos.
+3. En tu turno puedes:
+   • Hacer una pregunta de sí o no (Ej: ¿Tiene barba?).
+   • Intentar adivinar el personaje del oponente.
+4. Puedes hacer clic en los personajes que descartes para ocultarlos.
 
-<h2 style='color:#F28D35;'>🔁 Final del juego</h2>
-<p style='color:#333'>Aparece una pantalla de felicitación o de ánimo.<br>Se guarda la partida en la base de datos.</p>
-</body></html>
+GANADOR
+Si aciertas el personaje del oponente, ganas. Si fallas, tienes tres intentos. Si fallas en el
+tercer intento pierdes.
+
+FIN DEL JUEGO
+Verás una pantalla de resultado. La partida se guarda automáticamente en la base de datos.
 """);
+        texto.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+        texto.setLineWrap(true);
+        texto.setWrapStyleWord(true);
         texto.setEditable(false);
         texto.setOpaque(false);
+        texto.setMargin(new Insets(15, 20, 15, 20));
 
+        // ScrollPane personalizado
         JScrollPane scroll = new JScrollPane(texto);
-        scroll.setBorder(null);
+        scroll.setPreferredSize(new Dimension(850, 360));
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+
+        scroll.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(120, 200, 120);
+                this.trackColor = new Color(225, 255, 225);
+            }
+
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return createZeroButton();
+            }
+
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return createZeroButton();
+            }
+
+            private JButton createZeroButton() {
+                JButton btn = new JButton();
+                btn.setPreferredSize(new Dimension(0, 0));
+                btn.setMinimumSize(new Dimension(0, 0));
+                btn.setMaximumSize(new Dimension(0, 0));
+                return btn;
+            }
+        });
 
         contenido.add(scroll);
-        add(contenido, BorderLayout.CENTER);
+        JPanel centro = new JPanel();
+        centro.setOpaque(false);
+        centro.add(contenido);
+        add(centro, BorderLayout.CENTER);
 
+        // Botón estilizado en verde
         JButton volver = new JButton("Volver al Menú") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(186, 143, 255));
+                g2.setColor(new Color(75, 170, 100)); // verde intenso
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 45, 45);
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 45, 45);
                 g2.dispose();
                 super.paintComponent(g);
             }
+
             @Override
             protected void paintBorder(Graphics g) {}
         };
-        volver.setFont(new Font("SansSerif", Font.BOLD, 20));
+
+        volver.setFont(new Font("Segoe UI", Font.BOLD, 20));
         volver.setForeground(Color.WHITE);
         volver.setFocusPainted(false);
         volver.setContentAreaFilled(false);
         volver.setOpaque(false);
-        volver.setAlignmentX(Component.CENTER_ALIGNMENT);
-        volver.setPreferredSize(new Dimension(200, 50));
-        volver.setMaximumSize(new Dimension(200, 50));
+        volver.setPreferredSize(new Dimension(220, 50));
         volver.addActionListener(e -> ventana.mostrar("menu"));
 
         JPanel pie = new JPanel();
-        pie.setBackground(new Color(255, 245, 250));
+        pie.setBackground(new Color(235, 255, 240));
         pie.add(volver);
-
         add(pie, BorderLayout.SOUTH);
     }
 }

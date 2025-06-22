@@ -550,6 +550,7 @@ public class Tablero extends JPanel {
                         } else {
                             vidas--;
                             System.out.println("❌ Fallaste. Te quedan " + vidas + " vidas.");
+                            reproducirSonido("assets/sonidos/vida.wav");
                             actualizarVidasVisuales();
                             if (vidas <= 0) {
                                 yaFinalizoPartida = true;

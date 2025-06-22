@@ -40,12 +40,6 @@ public class VentanaGanador extends JPanel {
         JButton btnVolverAJugar = crearBoton("Volver a jugar", new Color(255, 204, 0));
         btnVolverAJugar.addActionListener((ActionEvent e) -> {
             GameDataCliente.limpiar();
-            /*try {
-                GameDataCliente.setConexion(new cliente.ClienteConexion("192.168.1.254", 5000));
-                GameDataCliente.getConexion().enviar("LISTO");
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }*/
             ventana.mostrar("registroJugador");
         });
 
@@ -79,8 +73,14 @@ public class VentanaGanador extends JPanel {
 
             @Override
             protected void paintBorder(Graphics g) {
-                // No dibuja bordes
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 45, 45);
+                g2.dispose();
             }
+
         };
         boton.setFont(new Font("SansSerif", Font.BOLD, 22));
         boton.setForeground(Color.WHITE);

@@ -103,7 +103,7 @@ public class RegistroJugador extends JPanel {
         volverMenu.setContentAreaFilled(false);
         volverMenu.setOpaque(false);
         volverMenu.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        volverMenu.setBounds(1100, 600, 120, 40); // esquina inferior izquierda
+        volverMenu.setBounds(1000, 630, 120, 40); // esquina inferior izquierda
         volverMenu.addActionListener(e -> ventana.mostrar("menu"));
         add(volverMenu);
 
