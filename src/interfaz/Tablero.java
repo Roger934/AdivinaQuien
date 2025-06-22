@@ -560,6 +560,12 @@ public class Tablero extends JPanel {
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
+
+                                try {
+                                    GameDataCliente.getConexion().enviar("RESPUESTA:ADIVINANZA_FALLIDA");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
 
@@ -843,15 +849,20 @@ public class Tablero extends JPanel {
     }
 
     private void reproducirSonido(String ruta) {
-        try {
-            File archivo = new File(ruta);
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(archivo);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        new Thread(() -> {
+            try {
+                File archivo = new File(ruta);
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(archivo);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                clip.start();
+
+                // Espera a que termine de reproducirse
+                Thread.sleep(clip.getMicrosecondLength() / 1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private void iniciarMusica() {
