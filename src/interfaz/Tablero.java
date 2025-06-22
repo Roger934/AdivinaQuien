@@ -7,6 +7,8 @@ import utils.GameDataCliente;
 import logica.PreguntaControlador;
 
 import javax.swing.Timer;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.awt.event.ActionEvent;
@@ -72,6 +74,10 @@ public class Tablero extends JPanel {
 
     // Extras:
     private JPanel vidasPanel;
+
+    // Mensajitos de error
+    private JLabel lblMensajeArriba;
+    private JLabel lblMensajeAbajo;
 
 
     // Creación de todo el tablero
@@ -364,8 +370,8 @@ public class Tablero extends JPanel {
     private JPanel crearPanelIzquierdo() {
         JPanel panelIzquierdo = new JPanel();
         panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
-        panelIzquierdo.setBackground(new Color(255, 250, 240));
-        panelIzquierdo.setBorder(BorderFactory.createTitledBorder("Seleccionar"));
+        panelIzquierdo.setBackground(Color.WHITE);
+        panelIzquierdo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel panelSeleccion = new JPanel();
         panelSeleccion.setLayout(new BoxLayout(panelSeleccion, BoxLayout.Y_AXIS));
@@ -379,7 +385,7 @@ public class Tablero extends JPanel {
         imagenSel.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
 
         nombreSel = new JLabel("Sin selección", SwingConstants.CENTER);
-        nombreSel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        nombreSel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         nombreSel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panelSeleccion.add(imagenSel);
@@ -388,62 +394,81 @@ public class Tablero extends JPanel {
         panelIzquierdo.add(panelSeleccion);
         panelIzquierdo.add(Box.createVerticalStrut(10));
 
-        btnDesdeTablero = new JButton("🔘 Desde tablero");
-        btnDesdeLista = new JButton("📋 Desde lista");
-        btnAleatorio = new JButton("🎲 Aleatorio");
+        // Botón principal
+        JButton btnAdivinar = crearBotonRedondo("Adivinar personaje", new Color(106, 27, 154), Color.WHITE);
+        btnAdivinar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        btnAdivinar.addActionListener(e -> {
+            if (yaAdivinoEsteTurno) {
+                mostrarMensajeTemporal(lblMensajeArriba, "Solo puedes adivinar una vez por turno.", 3000);
+                return;
+            }
 
-        ActionListener activar = e -> activarSeleccion();
+            if (!personajeYaElegido) {
+                mostrarMensajeTemporal(lblMensajeArriba, "Primero selecciona tu personaje secreto.", 3000);
+                return;
+            }
+
+            if (!esMiTurno) {
+                mostrarMensajeTemporal(lblMensajeArriba, "Espera tu turno-", 3000);
+                return;
+            }
+
+            mostrarMensajeTemporal(lblMensajeArriba, "Selecciona un personaje del tablero.", 3000);
+            modoAdivinar = true;
+            yaAdivinoEsteTurno = true;
+        });
+
+        panelIzquierdo.add(btnAdivinar);
+        panelIzquierdo.add(Box.createVerticalStrut(10));
+
+        // Mensaje entre adivinar y botones de abajo
+        lblMensajeArriba = new JLabel(" ");
+        lblMensajeArriba.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        lblMensajeArriba.setForeground(new Color(100, 0, 180));
+        lblMensajeArriba.setPreferredSize(new Dimension(220, 24));
+        lblMensajeArriba.setMaximumSize(new Dimension(220, 24));
+        lblMensajeArriba.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelIzquierdo.add(lblMensajeArriba);
+        panelIzquierdo.add(Box.createVerticalStrut(15));
+
+        // Botones inferiores
+        btnDesdeTablero = crearBotonRedondo("Desde tablero", new Color(26, 35, 126), Color.WHITE);
+        btnDesdeLista = crearBotonRedondo("Desde lista", new Color(198, 40, 40), Color.WHITE);
+        btnAleatorio = crearBotonRedondo("Aleatorio", new Color(239, 108, 0), Color.WHITE);
+
+        ActionListener activar = e -> {
+            activarSeleccion();
+            mostrarMensajeTemporal(lblMensajeAbajo, "Tablero activado para selección.", 2500);
+        };
 
         btnDesdeTablero.addActionListener(activar);
         btnDesdeLista.addActionListener(e -> seleccionarDesdeLista());
         btnAleatorio.addActionListener(e -> seleccionarAleatoriamente());
 
-        JButton btnAdivinar = new JButton("🎯 Adivinar personaje");
-        btnAdivinar.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btnAdivinar.setMaximumSize(new Dimension(180, 35));
-        btnAdivinar.setFocusable(false);
-        btnAdivinar.setFont(new Font("SansSerif", Font.PLAIN, 13));
-
-        btnAdivinar.addActionListener(e -> {
-            if (yaAdivinoEsteTurno) {
-                JOptionPane.showMessageDialog(this, "Solo puedes intentar adivinar una vez por turno.");
-                return;
-            }
-
-            if (!personajeYaElegido) {
-                JOptionPane.showMessageDialog(this, "Primero selecciona tu personaje secreto.");
-                return;
-            }
-
-            if (!esMiTurno) {
-                JOptionPane.showMessageDialog(this, "Espera tu turno para adivinar.");
-                return;
-            }
-
-            JOptionPane.showMessageDialog(this, "Selecciona un personaje del tablero para intentar adivinar.");
-            modoAdivinar = true;
-            yaAdivinoEsteTurno = true; // marca que ya intentó adivina
-        });
-        panelIzquierdo.add(Box.createVerticalStrut(20));
-        panelIzquierdo.add(btnAdivinar);
-
-
         for (JButton b : new JButton[]{btnDesdeTablero, btnDesdeLista, btnAleatorio}) {
             b.setAlignmentX(Component.CENTER_ALIGNMENT);
-            b.setMaximumSize(new Dimension(180, 35));
-            b.setFocusable(false);
-            b.setFont(new Font("SansSerif", Font.PLAIN, 13));
             panelIzquierdo.add(Box.createVerticalStrut(10));
             panelIzquierdo.add(b);
         }
 
+        // Mensaje debajo de los 3 botones
+        panelIzquierdo.add(Box.createVerticalStrut(15));
+        lblMensajeAbajo = new JLabel(" ");
+        lblMensajeAbajo.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        lblMensajeAbajo.setForeground(new Color(50, 50, 50));
+        lblMensajeAbajo.setPreferredSize(new Dimension(220, 24));
+        lblMensajeAbajo.setMaximumSize(new Dimension(220, 24));
+        lblMensajeAbajo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelIzquierdo.add(lblMensajeAbajo);
+
         return panelIzquierdo;
     }
 
+
     private JPanel crearTableroVisual(List<Personaje> personajes) {
         JPanel tableroPanel = new JPanel(new GridLayout(4, 6, 10, 10));
-        tableroPanel.setBackground(Color.LIGHT_GRAY);
+        tableroPanel.setBackground(new Color(230, 240, 250));
         tableroPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
         Map<JLabel, ImageIcon> mapaOriginales = new HashMap<>();
@@ -451,28 +476,48 @@ public class Tablero extends JPanel {
         for (Personaje p : personajes) {
             JPanel celda = new JPanel(new BorderLayout());
             celda.setBackground(Color.WHITE);
-            celda.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            celda.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(180, 180, 180), 2, true),
+                    BorderFactory.createEmptyBorder(5, 5, 5, 5)
+            ));
 
             ImageIcon iconoOriginal = new ImageIcon(p.getRutaImagen());
-            Image imgEsc = iconoOriginal.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            Image imgEsc = iconoOriginal.getImage().getScaledInstance(90, 90, Image.SCALE_SMOOTH);
             ImageIcon iconoEscalado = new ImageIcon(imgEsc);
             JLabel imagen = new JLabel(iconoEscalado, SwingConstants.CENTER);
+            imagen.setHorizontalAlignment(SwingConstants.CENTER);
 
             JLabel nombre = new JLabel(p.getNombre(), SwingConstants.CENTER);
-            nombre.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            nombre.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            nombre.setForeground(new Color(50, 50, 50));
 
             mapaOriginales.put(imagen, iconoEscalado);
 
             celda.add(imagen, BorderLayout.CENTER);
             celda.add(nombre, BorderLayout.SOUTH);
 
+            // Hover visual
+            celda.addMouseListener(new MouseAdapter() {
+                Color original = celda.getBackground();
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    celda.setBackground(new Color(220, 235, 250));
+                    celda.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    celda.setBackground(original);
+                }
+            });
+
             imagen.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
                     if (modoAdivinar) {
-                        modoAdivinar = false; // 🔁 se desactiva después de usarlo
+                        modoAdivinar = false;
 
-                        // Validar si ya tienes personaje del rival
                         String personajeRival = GameDataCliente.getPersonajeRival();
                         if (personajeRival == null) {
                             JOptionPane.showMessageDialog(Tablero.this,
@@ -491,16 +536,12 @@ public class Tablero extends JPanel {
 
                         if (confirm == JOptionPane.YES_OPTION) {
                             System.out.println("🔍 Intentaste adivinar: " + p.getNombre());
-                            // Luego aquí se compara con personajeRival
                         }
 
                         String adivinanza = p.getNombre().trim();
-
                         if (adivinanza.equalsIgnoreCase(personajeRival)) {
                             System.out.println("✅ ¡Has adivinado correctamente!");
                             yaFinalizoPartida = true;
-
-                            // Avisar al servidor que ya terminó la partida y como RESULTADO:GANE
                             try {
                                 GameDataCliente.getConexion().enviar("RESULTADO:GANE");
                             } catch (IOException e) {
@@ -510,11 +551,9 @@ public class Tablero extends JPanel {
                             vidas--;
                             System.out.println("❌ Fallaste. Te quedan " + vidas + " vidas.");
                             actualizarVidasVisuales();
-
                             if (vidas <= 0) {
                                 yaFinalizoPartida = true;
                                 System.out.println("💀 Te has quedado sin intentos.");
-                                // Aquí avisamos al servidor que perdí y como "RESULTADO:PERDI"
                                 try {
                                     GameDataCliente.getConexion().enviar("RESULTADO:PERDI");
                                 } catch (IOException e) {
@@ -522,7 +561,6 @@ public class Tablero extends JPanel {
                                 }
                             }
                         }
-
 
                         return;
                     }
@@ -539,7 +577,7 @@ public class Tablero extends JPanel {
                             imagen.setBackground(Color.GRAY);
                         } else {
                             ImageIcon icono = new ImageIcon(p.getRutaImagen());
-                            Image img = icono.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                            Image img = icono.getImage().getScaledInstance(90, 90, Image.SCALE_SMOOTH);
                             imagen.setIcon(new ImageIcon(img));
                             imagen.setOpaque(false);
                         }
@@ -554,25 +592,33 @@ public class Tablero extends JPanel {
         return tableroPanel;
     }
 
+
     private JPanel crearPanelDerecho() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
-        panel.setPreferredSize(new Dimension(300, 500));
-        panel.setBackground(new Color(240, 255, 250));
+        panel.setPreferredSize(new Dimension(300, 550));
+        panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createTitledBorder("Preguntar"));
 
-        // --- 1. Parte superior: Registro del chat ---
-        areaChat = new JTextArea(10, 20);
+        // --- 1. Chat superior ---
+        areaChat = new JTextArea();
+        areaChat.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         areaChat.setEditable(false);
         areaChat.setLineWrap(true);
         areaChat.setWrapStyleWord(true);
         JScrollPane scrollChat = new JScrollPane(areaChat);
+        scrollChat.setPreferredSize(new Dimension(280, 130));
         panel.add(scrollChat, BorderLayout.NORTH);
 
-        // --- 2. Parte media: ComboBox de preguntas y campo libre ---
+        // --- 2. Preguntas ---
         JPanel panelPreguntas = new JPanel();
         panelPreguntas.setLayout(new BoxLayout(panelPreguntas, BoxLayout.Y_AXIS));
         panelPreguntas.setOpaque(false);
+        panelPreguntas.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel lbl1 = new JLabel("Elegir pregunta:");
+        lbl1.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        panelPreguntas.add(lbl1);
 
         JComboBox<String> comboPreguntas = new JComboBox<>();
         comboPreguntas.addItem("--- Seleccione una pregunta ---");
@@ -580,27 +626,78 @@ public class Tablero extends JPanel {
             comboPreguntas.addItem(pregunta);
         }
         comboPreguntas.setMaximumSize(new Dimension(250, 30));
+        panelPreguntas.add(comboPreguntas);
+        panelPreguntas.add(Box.createVerticalStrut(10));
+
+        JLabel lbl2 = new JLabel("O escribe una:");
+        lbl2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        panelPreguntas.add(lbl2);
 
         JTextField campoPreguntaLibre = new JTextField();
         campoPreguntaLibre.setMaximumSize(new Dimension(250, 30));
+        panelPreguntas.add(campoPreguntaLibre);
+        panelPreguntas.add(Box.createVerticalStrut(15));
 
-        btnPreguntar = new JButton("💬 Hacer pregunta");
+        btnPreguntar = new JButton("Hacer pregunta");
+        btnPreguntar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnPreguntar.setBackground(new Color(51, 102, 255));
+        btnPreguntar.setForeground(Color.WHITE);
+        btnPreguntar.setFocusPainted(false);
+        btnPreguntar.setBorder(BorderFactory.createLineBorder(new Color(30, 60, 200)));
+        btnPreguntar.setMaximumSize(new Dimension(250, 35));
         btnPreguntar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelPreguntas.add(btnPreguntar);
+        panelPreguntas.add(Box.createVerticalStrut(10));
 
+        // --- Label para mensajes debajo del botón ---
+        JLabel lblMensaje = new JLabel(" ");
+        lblMensaje.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblMensaje.setForeground(Color.RED);
+        lblMensaje.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblMensaje.setMaximumSize(new Dimension(250, 30));
+        panelPreguntas.add(lblMensaje);
+
+        panel.add(panelPreguntas, BorderLayout.CENTER);
+
+        // --- 3. Botones de respuesta ---
+        JPanel panelRespuestas = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        panelRespuestas.setOpaque(false);
+
+        btnSi = new JButton("Sí");
+        btnNo = new JButton("No");
+
+        for (JButton b : new JButton[]{btnSi, btnNo}) {
+            b.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            b.setPreferredSize(new Dimension(100, 35));
+            b.setFocusPainted(false);
+            b.setEnabled(false);
+        }
+
+        btnSi.setBackground(new Color(2, 151, 5));
+        btnSi.setForeground(Color.WHITE);
+
+        btnNo.setBackground(new Color(220, 20, 60));
+        btnNo.setForeground(Color.WHITE);
+
+        panelRespuestas.add(btnSi);
+        panelRespuestas.add(btnNo);
+
+        panel.add(panelRespuestas, BorderLayout.SOUTH);
+
+        // --- Lógica del botón preguntar ---
         btnPreguntar.addActionListener(e -> {
             if (esperandoRespuesta) {
-                JOptionPane.showMessageDialog(this, "Debes esperar la respuesta del oponente.");
+                mostrarMensajeTemp(lblMensaje, "Debes esperar la respuesta del oponente.");
                 return;
             }
 
-
             if (!personajeYaElegido) {
-                JOptionPane.showMessageDialog(this, "Primero selecciona tu personaje.");
+                mostrarMensajeTemp(lblMensaje, "Primero selecciona tu personaje.");
                 return;
             }
 
             if (GameDataCliente.getPersonajeRival() == null) {
-                JOptionPane.showMessageDialog(this, "El rival aún no ha seleccionado su personaje.");
+                mostrarMensajeTemp(lblMensaje, "El rival aún no ha seleccionado su personaje.");
                 return;
             }
 
@@ -610,53 +707,38 @@ public class Tablero extends JPanel {
                     ("--- Seleccione una pregunta ---".equals(seleccionCombo) ? "" : seleccionCombo);
 
             if (!esMiTurno) {
-                JOptionPane.showMessageDialog(this, "Espera tu turno.");
+                mostrarMensajeTemp(lblMensaje, "Espera tu turno.");
                 return;
             }
 
             if (preguntaFinal.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Selecciona o escribe una pregunta válida.");
+                mostrarMensajeTemp(lblMensaje, "Selecciona o escribe una pregunta válida.");
                 return;
             }
 
             try {
                 GameDataCliente.getConexion().enviar("PREGUNTA:" + preguntaFinal);
                 areaChat.append("Tú: " + preguntaFinal + "\n");
-                esperandoRespuesta = true; // 🔒 bloquea nuevas preguntas
+                esperandoRespuesta = true;
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         });
 
-        panelPreguntas.add(new JLabel("Elegir pregunta:"));
-        panelPreguntas.add(comboPreguntas);
-        panelPreguntas.add(Box.createVerticalStrut(10));
-        panelPreguntas.add(new JLabel("O escribe una:"));
-        panelPreguntas.add(campoPreguntaLibre);
-        panelPreguntas.add(Box.createVerticalStrut(15));
-        panelPreguntas.add(btnPreguntar);
-
-        panel.add(panelPreguntas, BorderLayout.CENTER);
-
-        // --- 3. Parte inferior: Botones de respuesta Sí/No ---
-        JPanel panelRespuestas = new JPanel();
-        panelRespuestas.setOpaque(false);
-        btnSi = new JButton("✅ Sí");
-        btnNo = new JButton("❌ No");
-
-        btnSi.setEnabled(false);
-        btnNo.setEnabled(false);
-
         btnSi.addActionListener(e -> responder("SÍ", areaChat, btnSi, btnNo));
         btnNo.addActionListener(e -> responder("NO", areaChat, btnSi, btnNo));
 
-        panelRespuestas.add(btnSi);
-        panelRespuestas.add(btnNo);
-
-        panel.add(panelRespuestas, BorderLayout.SOUTH);
-
         return panel;
     }
+
+    // Método para mostrar mensajes temporales
+    private void mostrarMensajeTemp(JLabel lbl, String mensaje) {
+        lbl.setText(mensaje);
+        Timer t = new Timer(3000, evt -> lbl.setText(" "));
+        t.setRepeats(false);
+        t.start();
+    }
+
 
     private void responder(String respuesta, JTextArea areaChat, JButton btnSi, JButton btnNo) {
         try {
@@ -806,6 +888,27 @@ public class Tablero extends JPanel {
         return new ImageIcon(img);
     }
 
+    // BOTONES_______________________________
+    private JButton crearBotonRedondo(String texto, Color fondo, Color textoColor) {
+        JButton boton = new JButton(texto);
+        boton.setMaximumSize(new Dimension(200, 40));
+        boton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        boton.setForeground(textoColor);
+        boton.setBackground(fondo);
+        boton.setFocusPainted(false);
+        boton.setContentAreaFilled(true);
+        boton.setBorder(BorderFactory.createLineBorder(fondo.darker(), 2, true));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return boton;
+    }
+
+    //----------Mensajes
+    private void mostrarMensajeTemporal(JLabel label, String texto, int milisegundos) {
+        label.setText(texto);
+        Timer timer = new Timer(milisegundos, e -> label.setText(" "));
+        timer.setRepeats(false);
+        timer.start();
+    }
 
 
 }
