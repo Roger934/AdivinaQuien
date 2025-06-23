@@ -229,8 +229,8 @@ public class Tablero extends JPanel {
                                 JOptionPane.WARNING_MESSAGE
                         );
 
-                        //GameDataCliente.getConexion().cerrar();  // Cerramos el socket
-                        //GameDataCliente.limpiar();     // Limpiamos el registro
+                        GameDataCliente.getConexion().cerrar();  // Cerramos el socket
+                        GameDataCliente.limpiar();     // Limpiamos el registro
                         ventana.mostrar("registroJugador"); // Vuelve a la pantalla inicial
                     }
                 }
@@ -531,7 +531,7 @@ public class Tablero extends JPanel {
                                     JOptionPane.WARNING_MESSAGE);
                             return;
                         }
-
+                        // Punto 72
                         int confirm = JOptionPane.showConfirmDialog(
                                 Tablero.this,
                                 "¿Quieres adivinar que este es el personaje del oponente?",

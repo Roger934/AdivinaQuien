@@ -39,8 +39,6 @@ public class VentanaGanador extends JPanel {
 
         JButton btnVolverAJugar = crearBoton("Volver a jugar", new Color(255, 204, 0));
         btnVolverAJugar.addActionListener((ActionEvent e) -> {
-            GameDataCliente.limpiar();
-            GameDataCliente.getConexion().cerrar();
             ventana.mostrar("registroJugador");
         });
 
@@ -54,7 +52,6 @@ public class VentanaGanador extends JPanel {
         JButton btnSalir = crearBoton("Salir", new Color(102, 51, 153));
         btnSalir.setBounds(1080, 620, 160, 50);
         btnSalir.addActionListener((ActionEvent e) -> {
-            GameDataCliente.limpiar();
             ventana.mostrar("menu");
         });
         fondo.add(btnSalir);
