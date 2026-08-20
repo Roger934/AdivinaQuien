@@ -1,6 +1,7 @@
 package interfaz;
 
 import cliente.ClienteConexion;
+import utils.Config;
 import utils.GameDataCliente;
 
 import javax.swing.*;
@@ -8,9 +9,6 @@ import java.awt.*;
 import java.io.IOException;
 
 public class RegistroJugador extends JPanel {
-
-    private static final String IP_SERVIDOR = "127.0.0.1";
-    private static final int PUERTO = 5000;
 
     public RegistroJugador(VentanaPrincipal ventana) {
         setLayout(null);
@@ -131,7 +129,7 @@ public class RegistroJugador extends JPanel {
             }
 
             try {
-                ClienteConexion conexion = new ClienteConexion(IP_SERVIDOR, PUERTO);
+                ClienteConexion conexion = new ClienteConexion(Config.getIpServidor(), Config.getPuerto());
                 conexion.enviar("LISTO");
                 conexion.enviar(nombre);
                 String respuesta = conexion.recibir();

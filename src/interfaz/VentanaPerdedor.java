@@ -26,7 +26,7 @@ public class VentanaPerdedor extends JPanel {
         caja.setBounds(750, 200, 480, 300); // Ajustable
         fondo.add(caja);
 
-        JLabel perdido = new JLabel("😥 Has perdido, " + nombrePerdedor, SwingConstants.CENTER);
+        JLabel perdido = new JLabel("Has perdido, " + nombrePerdedor, SwingConstants.CENTER);
         perdido.setFont(new Font("SansSerif", Font.BOLD, 30));
         perdido.setForeground(new Color(255, 255, 255));
         perdido.setAlignmentX(Component.CENTER_ALIGNMENT);

@@ -1,16 +1,16 @@
 package cliente;
 
+import utils.Config;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
 public class Cliente {
-    private static final String IP_SERVIDOR = "127.0.0.1"; // 127.0.0.1 -> Cambia por IP real en otra máquina
-    private static final int PUERTO = 5000;
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket(IP_SERVIDOR, PUERTO);
+        try (Socket socket = new Socket(Config.getIpServidor(), Config.getPuerto());
              DataInputStream entrada = new DataInputStream(socket.getInputStream());
              DataOutputStream salida = new DataOutputStream(socket.getOutputStream())) {
 

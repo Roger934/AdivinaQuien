@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 
 public class Animaciones {
 
-    // 💗 Efecto de palpitación (zoom in/out)
+    //  Efecto de palpitación (zoom in/out)
     public static void palpitar(JComponent comp) {
         Timer timer = new Timer(30, null);
         final float[] escala = {1.0f};
@@ -25,7 +25,7 @@ public class Animaciones {
         timer.start();
     }
 
-    // 🔄 Efecto de sacudida horizontal (para errores)
+    //  Efecto de sacudida horizontal (para errores)
     public static void sacudir(JComponent comp) {
         Point original = comp.getLocation();
         Timer timer = new Timer(20, null);
@@ -51,7 +51,7 @@ public class Animaciones {
         timer.start();
     }
 
-    // 🪂 Efecto de rebote hacia abajo
+    //  Efecto de rebote hacia abajo
     public static void rebote(JComponent comp) {
         Point original = comp.getLocation();
         Timer timer = new Timer(20, null);

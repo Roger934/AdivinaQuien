@@ -27,7 +27,7 @@ public class VentanaGanador extends JPanel {
         caja.setBounds(70, 220, 480, 300); // Puedes ajustar X, Y aquí
         fondo.add(caja);
 
-        JLabel felicidades = new JLabel("\uD83C\uDF89 ¡Felicidades! " + nombreGanador + " Has ganado \uD83C\uDFC6", SwingConstants.CENTER);
+        JLabel felicidades = new JLabel("¡Felicidades! " + nombreGanador + " has ganado", SwingConstants.CENTER);
         felicidades.setFont(new Font("SansSerif", Font.BOLD, 30));
         felicidades.setForeground(new Color(51, 51, 51));
         felicidades.setAlignmentX(Component.CENTER_ALIGNMENT);

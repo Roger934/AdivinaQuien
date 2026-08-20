@@ -40,7 +40,7 @@ public class ClienteConexion {
             }
             if (entrada != null) entrada.close();
             if (salida != null) salida.close();
-            System.out.println("🔌 Conexión cerrada correctamente.");
+            System.out.println(" Conexión cerrada correctamente.");
         } catch (IOException e) {
             e.printStackTrace();
         }

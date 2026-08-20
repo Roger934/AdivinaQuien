@@ -1,24 +1,20 @@
 package modelo;
 
-import modelo.Personaje;
+import utils.Config;
 
 import java.sql.*;
 import java.util.*;
 
 public class TestBase {
 
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/adivina_quien";
-    private static final String USUARIO = "root";
-    private static final String PASSWORD = ""; // tu contraseña si configuraste una
-
     public static void main(String[] args) {
         List<Personaje> todos = obtenerTodosLosPersonajes();
-        System.out.println("✅ Todos los personajes:");
+        System.out.println(" Todos los personajes:");
         for (Personaje p : todos) {
             System.out.println(p);
         }
 
-        System.out.println("\n✅ Personajes seleccionados aleatoriamente:");
+        System.out.println("\n Personajes seleccionados aleatoriamente:");
         List<Integer> idsAleatorios = generarIDsAleatorios(40, 24);
         List<Personaje> seleccionados = obtenerPorIDs(idsAleatorios);
 
@@ -31,7 +27,7 @@ public class TestBase {
     public static List<Personaje> obtenerTodosLosPersonajes() {
         List<Personaje> lista = new ArrayList<>();
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, USUARIO, PASSWORD);
+        try (Connection conn = DriverManager.getConnection(Config.getDbUrl(), Config.getDbUsuario(), Config.getDbPassword());
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT id, nombre, rutaImagen FROM personajes")) {
 
@@ -59,7 +55,7 @@ public class TestBase {
         String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
         String query = "SELECT id, nombre, rutaImagen FROM personajes WHERE id IN (" + placeholders + ")";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, USUARIO, PASSWORD);
+        try (Connection conn = DriverManager.getConnection(Config.getDbUrl(), Config.getDbUsuario(), Config.getDbPassword());
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             for (int i = 0; i < ids.size(); i++) {

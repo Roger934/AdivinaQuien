@@ -25,5 +25,11 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Build & Portable Tools ###
+bin/
+jdk/
+*.zip
+sources.txt
+
 ### Mac OS ###
 .DS_Store

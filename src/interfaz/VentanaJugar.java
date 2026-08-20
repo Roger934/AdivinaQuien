@@ -42,7 +42,7 @@ public class VentanaJugar extends JPanel {
 
         jugar.addActionListener(e -> {
             if (GameDataCliente.getConexion() != null) {
-                System.out.println("➡️ Ir a esperandoJugador con conexión: " + GameDataCliente.getConexion());
+                System.out.println(" Ir a esperandoJugador con conexión: " + GameDataCliente.getConexion());
                 ventana.mostrar("esperandoJugador");
             } else {
                 mostrarError("Primero debes registrarte correctamente.");

@@ -1,4 +1,4 @@
-package logica;
+package servidor;
 
 import utils.Config;
 
@@ -70,4 +70,14 @@ public class RegistroPartida {
             System.err.println(" Error al guardar la partida en la base de datos.");
         }
     }
+
+    public void limpiar() {
+        this.jugador1 = null;
+        this.jugador2 = null;
+        this.ganador = null;
+        this.personajeGanador = null;
+        this.fecha = null;
+        this.duracion = null;
+    }
+
 }

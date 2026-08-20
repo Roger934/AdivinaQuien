@@ -26,18 +26,19 @@ import java.util.List;
 public class Tablero extends JPanel {
 
     private VentanaPrincipal ventana;
-    private boolean enableTablero = false;
+    private boolean enableTablero = true; // Permite seleccionar directamente desde el tablero
     private boolean personajeYaElegido = false;
     private boolean tableroInteractivo = false;
 
     private JLabel imagenSel;
     private JLabel nombreSel;
-    private Personaje personajeSeleccionado; // 🔹 Nuevo atributo para guardar el personaje
-    private List<Personaje> personajes; // 🔹 Ahora es accesible en toda la clase
+    private Personaje personajeSeleccionado; //  Nuevo atributo para guardar el personaje
+    private List<Personaje> personajes; //  Ahora es accesible en toda la clase
 
     private JButton btnDesdeTablero;
     private JButton btnDesdeLista;
     private JButton btnAleatorio;
+    private JPanel panelBotonesSeleccion;
 
     private JTextArea areaChat;
 
@@ -58,6 +59,7 @@ public class Tablero extends JPanel {
     private boolean esMiTurno = false;
     private boolean esperandoRespuesta = false;
     private boolean yaAdivinoEsteTurno = false;
+    private JLabel lblTurnoInfo;
 
     // Timer
     private Timer timerPartida;
@@ -89,20 +91,20 @@ public class Tablero extends JPanel {
         List<Integer> lista = GameDataCliente.getListaPersonajes();
         this.personajes = TableroControlador.obtenerPersonajesDesdeBD(lista);
 
-        List<Personaje> personajes = TableroControlador.obtenerPersonajesDesdeBD(lista);
-
         JPanel panelSuperior = crearPanelSuperior();
         add(panelSuperior, BorderLayout.NORTH);
 
         JPanel panelIzquierdo = crearPanelIzquierdo();
         add(panelIzquierdo, BorderLayout.WEST);
 
-        JPanel tableroPanel = crearTableroVisual(personajes);
+        JPanel tableroPanel = crearTableroVisual(this.personajes);
         add(tableroPanel, BorderLayout.CENTER);
 
         // Panel para las preguntas
         JPanel panelDerecho = crearPanelDerecho();
         add(panelDerecho, BorderLayout.EAST);
+
+        actualizarBannerTurno();
 
         // Hilo para los mensajes -----------------------------------------------------------------------------
         new Thread(() -> {
@@ -116,7 +118,13 @@ public class Tablero extends JPanel {
                     if (mensaje.startsWith("OPONENTE_PERSONAJE:")) {
                         String nombrePersonaje = mensaje.substring("OPONENTE_PERSONAJE:".length()).trim();
                         GameDataCliente.setPersonajeRival(nombrePersonaje);
-                        System.out.println("🕵️ Personaje del oponente recibido: " + nombrePersonaje);
+                        System.out.println(" Personaje del oponente recibido: " + nombrePersonaje);
+                        SwingUtilities.invokeLater(() -> {
+                            actualizarBannerTurno();
+                            if (btnPreguntar != null) {
+                                btnPreguntar.setEnabled(esMiTurno && preguntaPendiente == null && personajeYaElegido);
+                            }
+                        });
                     }
 
                     else if (mensaje.startsWith("PREGUNTA:")) {
@@ -148,17 +156,18 @@ public class Tablero extends JPanel {
                         int miNumero = GameDataCliente.getNumeroJugador();
 
                         esMiTurno = (turno == miNumero);
-                        System.out.println("📢 Turno actualizado. ¿Es mi turno? " + esMiTurno);
+                        System.out.println(" Turno actualizado. ¿Es mi turno? " + esMiTurno);
                         yaAdivinoEsteTurno = false;
 
                         SwingUtilities.invokeLater(() -> {
-                            // Solo bloquea preguntar si no es tu turno o hay pregunta sin responder
-                            btnPreguntar.setEnabled(esMiTurno && preguntaPendiente == null);
+                            actualizarBannerTurno();
+                            // Solo bloquea preguntar si no es tu turno o hay pregunta sin responder o no hay rival listo
+                            btnPreguntar.setEnabled(esMiTurno && preguntaPendiente == null && personajeYaElegido && GameDataCliente.getPersonajeRival() != null);
                         });
                     }
 
                     else if (mensaje.equalsIgnoreCase("GANASTE")) {
-                        System.out.println("🏆 Has ganado la partida.");
+                        System.out.println(" Has ganado la partida.");
                         if (timerPartida != null) {
                             timerPartida.stop();
                         }
@@ -204,7 +213,7 @@ public class Tablero extends JPanel {
                     }
 
                     else if (mensaje.equalsIgnoreCase("PERDISTE")) {
-                        System.out.println("😞 Has perdido la partida.");
+                        System.out.println(" Has perdido la partida.");
                         if (musicaClip != null) {
                             musicaClip.stop();
                         }
@@ -217,7 +226,7 @@ public class Tablero extends JPanel {
                     }
 
                     else if (mensaje.equals("DESCONEXION_RIVAL")) {
-                        System.out.println("❌ El rival se ha desconectado. Partida cancelada.");
+                        System.out.println(" El rival se ha desconectado. Partida cancelada.");
 
                         if (musicaClip != null) {
                             musicaClip.stop();
@@ -236,7 +245,7 @@ public class Tablero extends JPanel {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "❌ Error de conexión con el servidor.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, " Error de conexión con el servidor.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }).start();
         // -------------------------------------------------------------------------------------------------------------
@@ -253,12 +262,29 @@ public class Tablero extends JPanel {
             int segundos = (int) (transcurrido / 1000) % 60;
             int minutos = (int) ((transcurrido / 1000) / 60);
 
-            lblTimer.setText(String.format("⏱ Tiempo: %02d:%02d", minutos, segundos));
+            lblTimer.setText(String.format(" Tiempo: %02d:%02d", minutos, segundos));
 
         });
         timerPartida.start();
         iniciarMusica();
 
+    }
+
+    public void actualizarBannerTurno() {
+        if (lblTurnoInfo == null) return;
+        if (!personajeYaElegido) {
+            lblTurnoInfo.setText("[SELECCION] Elige tu personaje secreto (haz clic en el tablero o usa los botones)");
+            lblTurnoInfo.setForeground(new Color(255, 235, 59));
+        } else if (GameDataCliente.getPersonajeRival() == null) {
+            lblTurnoInfo.setText("[ESPERANDO] Esperando a que el rival seleccione su personaje...");
+            lblTurnoInfo.setForeground(new Color(255, 204, 128));
+        } else if (esMiTurno) {
+            lblTurnoInfo.setText("[TU TURNO] Puedes hacer una pregunta o adivinar");
+            lblTurnoInfo.setForeground(new Color(129, 255, 132));
+        } else {
+            lblTurnoInfo.setText("[TURNO RIVAL] Turno de " + GameDataCliente.getNombreRival() + " (esperando su respuesta...)");
+            lblTurnoInfo.setForeground(new Color(255, 183, 77));
+        }
     }
 
     //__________________________________SUPERIOR__________________________
@@ -276,7 +302,7 @@ public class Tablero extends JPanel {
         panel.setOpaque(false);
 
         // Fuente
-        Font fuenteGeneral = new Font("Segoe UI Emoji", Font.BOLD, 20);
+        Font fuenteGeneral = new Font("Segoe UI", Font.BOLD, 18);
         Color colorTexto = Color.WHITE;
 
         // --- Panel de arriba: botón música, fecha y tiempo ---
@@ -288,14 +314,14 @@ public class Tablero extends JPanel {
         btnMusica.setFocusPainted(false);
         btnMusica.setContentAreaFilled(false);
         btnMusica.setBorderPainted(false);
-        btnMusica.setToolTipText("Pausar/Reproducir música");
+        btnMusica.setToolTipText("Pausar/Reproducir musica");
         btnMusica.addActionListener(e -> toggleMusica());
 
-        JLabel lblFecha = new JLabel("📅 " + java.time.LocalDate.now());
+        JLabel lblFecha = new JLabel("Fecha: " + java.time.LocalDate.now());
         lblFecha.setFont(fuenteGeneral);
         lblFecha.setForeground(colorTexto);
 
-        lblTimer = new JLabel("⏱ Tiempo: 00:00");
+        lblTimer = new JLabel("Tiempo: 00:00");
         lblTimer.setFont(fuenteGeneral);
         lblTimer.setForeground(colorTexto);
 
@@ -338,11 +364,20 @@ public class Tablero extends JPanel {
         panelNombres.add(panelJugador);
         panelNombres.add(panelRival);
 
+        // Banner informativo de turno
+        lblTurnoInfo = new JLabel("[SELECCION] Elige tu personaje secreto (clic en el tablero)", SwingConstants.CENTER);
+        lblTurnoInfo.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        lblTurnoInfo.setForeground(new Color(255, 235, 59));
+        lblTurnoInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         // Añadir todo al header
         panel.add(Box.createVerticalStrut(5));
         panel.add(panelTop);
-        panel.add(Box.createVerticalStrut(15));
+        panel.add(Box.createVerticalStrut(8));
         panel.add(panelNombres);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(lblTurnoInfo);
+        panel.add(Box.createVerticalStrut(5));
 
         return panel;
     }
@@ -404,22 +439,27 @@ public class Tablero extends JPanel {
         btnAdivinar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         btnAdivinar.addActionListener(e -> {
-            if (yaAdivinoEsteTurno) {
-                mostrarMensajeTemporal(lblMensajeArriba, "Solo puedes adivinar una vez por turno.", 3000);
-                return;
-            }
-
             if (!personajeYaElegido) {
                 mostrarMensajeTemporal(lblMensajeArriba, "Primero selecciona tu personaje secreto.", 3000);
                 return;
             }
 
-            if (!esMiTurno) {
-                mostrarMensajeTemporal(lblMensajeArriba, "Espera tu turno-", 3000);
+            if (GameDataCliente.getPersonajeRival() == null) {
+                mostrarMensajeTemporal(lblMensajeArriba, "El rival aún no selecciona su personaje.", 3000);
                 return;
             }
 
-            mostrarMensajeTemporal(lblMensajeArriba, "Selecciona un personaje del tablero.", 3000);
+            if (!esMiTurno) {
+                mostrarMensajeTemporal(lblMensajeArriba, "Espera tu turno para adivinar.", 3000);
+                return;
+            }
+
+            if (yaAdivinoEsteTurno) {
+                mostrarMensajeTemporal(lblMensajeArriba, "Solo puedes adivinar una vez por turno.", 3000);
+                return;
+            }
+
+            mostrarMensajeTemporal(lblMensajeArriba, "Haz clic en el personaje rival en el tablero.", 3000);
             modoAdivinar = true;
             yaAdivinoEsteTurno = true;
         });
@@ -437,25 +477,30 @@ public class Tablero extends JPanel {
         panelIzquierdo.add(lblMensajeArriba);
         panelIzquierdo.add(Box.createVerticalStrut(15));
 
-        // Botones inferiores
+        // Contenedor de botones de selección inicial
+        panelBotonesSeleccion = new JPanel();
+        panelBotonesSeleccion.setLayout(new BoxLayout(panelBotonesSeleccion, BoxLayout.Y_AXIS));
+        panelBotonesSeleccion.setOpaque(false);
+        panelBotonesSeleccion.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         btnDesdeTablero = crearBotonRedondo("Desde tablero", new Color(26, 35, 126), Color.WHITE);
         btnDesdeLista = crearBotonRedondo("Desde lista", new Color(198, 40, 40), Color.WHITE);
         btnAleatorio = crearBotonRedondo("Aleatorio", new Color(239, 108, 0), Color.WHITE);
 
-        ActionListener activar = e -> {
+        btnDesdeTablero.addActionListener(e -> {
             activarSeleccion();
-            mostrarMensajeTemporal(lblMensajeAbajo, "Tablero activado para selección.", 2500);
-        };
-
-        btnDesdeTablero.addActionListener(activar);
+            mostrarMensajeTemporal(lblMensajeAbajo, "Haz clic en una casilla del tablero.", 2500);
+        });
         btnDesdeLista.addActionListener(e -> seleccionarDesdeLista());
         btnAleatorio.addActionListener(e -> seleccionarAleatoriamente());
 
         for (JButton b : new JButton[]{btnDesdeTablero, btnDesdeLista, btnAleatorio}) {
             b.setAlignmentX(Component.CENTER_ALIGNMENT);
-            panelIzquierdo.add(Box.createVerticalStrut(10));
-            panelIzquierdo.add(b);
+            panelBotonesSeleccion.add(Box.createVerticalStrut(10));
+            panelBotonesSeleccion.add(b);
         }
+
+        panelIzquierdo.add(panelBotonesSeleccion);
 
         // Mensaje debajo de los 3 botones
         panelIzquierdo.add(Box.createVerticalStrut(15));
@@ -540,12 +585,12 @@ public class Tablero extends JPanel {
                         );
 
                         if (confirm == JOptionPane.YES_OPTION) {
-                            System.out.println("🔍 Intentaste adivinar: " + p.getNombre());
+                            System.out.println(" Intentaste adivinar: " + p.getNombre());
                         }
 
                         String adivinanza = p.getNombre().trim();
                         if (adivinanza.equalsIgnoreCase(personajeRival)) {
-                            System.out.println("✅ ¡Has adivinado correctamente!");
+                            System.out.println(" ¡Has adivinado correctamente!");
                             yaFinalizoPartida = true;
                             try {
                                 GameDataCliente.getConexion().enviar("RESULTADO:GANE");
@@ -554,12 +599,12 @@ public class Tablero extends JPanel {
                             }
                         } else {
                             vidas--;
-                            System.out.println("❌ Fallaste. Te quedan " + vidas + " vidas.");
+                            System.out.println(" Fallaste. Te quedan " + vidas + " vidas.");
                             reproducirSonido("assets/sonidos/vida.wav");
                             actualizarVidasVisuales();
                             if (vidas <= 0) {
                                 yaFinalizoPartida = true;
-                                System.out.println("💀 Te has quedado sin intentos.");
+                                System.out.println(" Te has quedado sin intentos.");
                                 try {
                                     GameDataCliente.getConexion().enviar("RESULTADO:PERDI");
                                 } catch (IOException e) {
@@ -769,7 +814,7 @@ public class Tablero extends JPanel {
 
     private void activarSeleccion() {
         enableTablero = true;
-        JOptionPane.showMessageDialog(this, "✅ Tablero activado para selección.");
+        JOptionPane.showMessageDialog(this, "Tablero activado para seleccion.");
     }
 
     private void seleccionarPersonaje(Personaje personaje) {
@@ -785,20 +830,24 @@ public class Tablero extends JPanel {
         enableTablero = false;
         tableroInteractivo = true;
 
-        System.out.println("🎯 Personaje propio seleccionado: " + personaje.getNombre());
-        System.out.println("👉 Personaje rival actual en GameData: " + GameDataCliente.getPersonajeRival());
+        if (panelBotonesSeleccion != null) {
+            panelBotonesSeleccion.setVisible(false);
+        }
+        if (lblMensajeAbajo != null) {
+            lblMensajeAbajo.setText("Personaje fijado: " + personaje.getNombre());
+        }
+        actualizarBannerTurno();
+
+        System.out.println("[INFO] Personaje propio seleccionado: " + personaje.getNombre());
+        System.out.println("[INFO] Personaje rival actual en GameData: " + GameDataCliente.getPersonajeRival());
 
         if (GameDataCliente.getPersonajeRival() != null) {
-            System.out.println("✅ Ambos jugadores ya seleccionaron personaje.");
+            System.out.println("[INFO] Ambos jugadores ya seleccionaron personaje.");
         }
 
-        JOptionPane.showMessageDialog(ventana, "🎯 Personaje seleccionado: " + personaje.getNombre());
+        JOptionPane.showMessageDialog(ventana, "Personaje seleccionado: " + personaje.getNombre());
 
         enviarPersonajeAlServidor(); // Ahora se envía al servidor
-
-        btnDesdeTablero.setEnabled(false);
-        btnDesdeLista.setEnabled(false);
-        btnAleatorio.setEnabled(false);
     }
 
 
@@ -889,11 +938,11 @@ public class Tablero extends JPanel {
 
         if (musicaActiva) {
             musicaClip.stop();
-            btnMusica.setIcon(cargarYEscalar("C:/AdivinaQuien/assets/iconos/play.png", 32, 32));
+            btnMusica.setIcon(cargarYEscalar("assets/iconos/play.png", 32, 32));
         } else {
             musicaClip.start();
             musicaClip.loop(Clip.LOOP_CONTINUOUSLY);
-            btnMusica.setIcon(cargarYEscalar("C:/AdivinaQuien/assets/iconos/pause.png", 32, 32));
+            btnMusica.setIcon(cargarYEscalar("assets/iconos/pause.png", 32, 32));
         }
 
         musicaActiva = !musicaActiva;

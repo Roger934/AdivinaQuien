@@ -15,7 +15,7 @@ public class PantallaPresentacion extends JPanel {
         fondo = new ImageIcon("assets/fondos/portada.png").getImage();
 
         // Crear botón personalizado estilo "EMPEZAR"
-        JButton botonEmpezar = new JButton("EMPEZAR  ➜") {
+        JButton botonEmpezar = new JButton("EMPEZAR  ->") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
