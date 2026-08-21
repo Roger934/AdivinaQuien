@@ -23,10 +23,10 @@ public class Config {
         props.setProperty("db_usuario", "root");
         props.setProperty("db_password", "");
 
-        // Intentar leer desde config/config.properties o config.properties
-        File archivo = new File("config/config.properties");
+        // Intentar leer desde config.properties en la raiz o en config/
+        File archivo = new File("config.properties");
         if (!archivo.exists()) {
-            archivo = new File("config.properties");
+            archivo = new File("config/config.properties");
         }
 
         if (archivo.exists()) {
