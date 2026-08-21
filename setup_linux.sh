@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # ========================================================
 # INSTALADOR Y CONFIGURADOR AUTOMATICO PARA LINUX MINT
 # ========================================================
@@ -9,10 +9,15 @@ sudo apt update
 sudo apt install -y openjdk-17-jdk mariadb-server
 
 echo "=== 2. Iniciando servicio de MariaDB ==="
-sudo systemctl start mariadb
-sudo systemctl enable mariadb
+sudo systemctl start mariadb || sudo service mariadb start || sudo service mysql start
+sudo systemctl enable mariadb || true
 
-echo "=== 3. Creando Base de Datos e importando personajes ==="
+echo "=== 3. Configurando permisos y creando Base de Datos ==="
+# Permitir que Java/JDBC se conecte como root sin problemas de auth_socket
+sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY ''; FLUSH PRIVILEGES;" 2>/dev/null || true
+sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD(''); FLUSH PRIVILEGES;" 2>/dev/null || true
+
+# Importar tablas y personajes
 sudo mysql -u root < database_setup.sql
 
 echo "=== 4. Compilando el proyecto ==="
